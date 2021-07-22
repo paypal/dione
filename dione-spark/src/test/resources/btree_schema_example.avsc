@@ -1,0 +1,28 @@
+{
+  "type" : "record",
+  "name" : "keyValueSchema",
+  "namespace" : "na",
+  "doc" : "doc",
+  "fields" : [ {
+    "name" : "message_id",
+    "type" : "string"
+  }, {
+    "name" : "time_result_created",
+    "type" : "string"
+  }, {
+    "name" : "data_filename",
+    "type" : "string"
+  }, {
+    "name" : "data_offset",
+    "type" : "long"
+  }, {
+    "name" : "data_sub_offset",
+    "type" : "int"
+  }, {
+    "name" : "data_size",
+    "type" : "int"
+  }, {
+    "name" : "metadata",
+    "type" : [ "null", "long" ]
+  } ]
+}

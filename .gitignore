@@ -1,0 +1,26 @@
+target
+build
+.classpath
+spark-warehouse
+avro_base
+metastore_db
+avro_test_base
+.project
+.settings
+derby.log
+
+# Intellij
+.idea/
+*.iml
+*.iws
+*.pyc
+
+# Mac
+.DS_Store
+
+#batchdb files
+*.dat
+classes
+tmp
+
+TestData
