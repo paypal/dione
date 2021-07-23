@@ -1,0 +1,7 @@
+sudo: false
+language: java
+cache:
+  directories:
+    - "$HOME/.cache"
+
+
