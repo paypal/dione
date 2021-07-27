@@ -13,15 +13,38 @@
         <junit.version>5.4.2</junit.version>
         <hadoop.version>2.7.3</hadoop.version>
         <avro.version>1.8.2</avro.version>
-        <gpg.keyname>${env.GPG_KEY_NAME}</gpg.keyname>
-        <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
-        <gpg.secretKeyring>${env.GPG_KEY_FILE}</gpg.secretKeyring>
     </properties>
 
     <modules>
         <module>dione-hadoop</module>
         <module>dione-spark</module>
     </modules>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:paypal/dione.git</connection>
+        <developerConnection>scm:git:git@github.com:paypal/dione.git</developerConnection>
+        <url>https://github.com/paypal/dione</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>uzadude</id>
+            <name>Ohad Raviv</name>
+            <url>https://github.com/uzadude</url>
+            <roles>
+                <role>Project Owner</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
@@ -259,7 +282,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -267,6 +290,10 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <keyname>${env.GPG_KEY_NAME}</keyname>
+                                    <passphrase>${env.GPG_PASSPHRASE}</passphrase>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
