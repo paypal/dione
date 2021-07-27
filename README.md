@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/paypal/dione.svg?branch=main)](https://travis-ci.com/paypal/dione)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 # Dione
 Dione - an indexing Library for data on HDFS.
 
