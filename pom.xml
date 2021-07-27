@@ -257,7 +257,7 @@
                         <id>sign-artifacts</id>
                         <phase>verify</phase>
                         <goals>
-                            <goal>sign</goal>
+                            <goal>deploy</goal>
                         </goals>
                     </execution>
                 </executions>
