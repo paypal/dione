@@ -12,7 +12,7 @@ before_deploy:
 
 deploy:
   provider: script
-  script: "mvn --settings settings-ossrh.xml -Prelease -B -V deploy"
+  script: "mvn -DskipTests --settings settings-ossrh.xml -Prelease -B -V deploy"
   skip_cleanup: true
   on:
     branch: main
