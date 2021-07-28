@@ -9,11 +9,9 @@
 
     <artifactId>dione-spark</artifactId>
 
-
     <properties>
         <spark.version>2.3.0</spark.version>
     </properties>
-
 
     <dependencies>
         <dependency>
@@ -28,7 +26,6 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-hive_2.11</artifactId>
@@ -44,7 +41,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>com.databricks</groupId>
             <artifactId>spark-avro_2.11</artifactId>
@@ -56,7 +52,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
     </dependencies>
 
 </project>
