@@ -38,7 +38,9 @@ jobs:
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
            mkdir -p /home/runner/.gnupg/
+           chmod 700 /home/runner/.gnupg/
            cp pubring.kbx /home/runner/.gnupg/
+           chmod 644 /home/runner/.gnupg/pubring.kbx
            openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out gpg.key -k 84950162749609564
             ls -l
             gpg --import -no-tty --batch --yes gpg.key
