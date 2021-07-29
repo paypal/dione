@@ -6,7 +6,7 @@ name: Dione Maven Build CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [ *release* ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Step 1 - Checkout DIONE main branch from GitHub
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       # Runs a single command using the runners shell
       - name: Step 2 Set up JDK 1.8
@@ -47,7 +47,7 @@ jobs:
           run:
             ls -a
 
-         Runs a set of commands using the runners shell
+        # Runs a set of commands using the runners shell
         - name: Step 6 GitHub Action list files in current  target directory
           run: |
             cd target
