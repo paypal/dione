@@ -37,7 +37,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter $ITER_VALUE -in gpg.key.enc -out gpg.key -k $K_VALUE
+           openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out gpg.key -k 84950162749609564
             gpg --import gpg.key
             export GPG_KEY_FILE="$PWD/gpg.key"
             env:
