@@ -39,9 +39,7 @@ jobs:
         run: |
            openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out gpg.key -k 84950162749609564
             ls -l 
-            locate gpg.key
             gpg --import gpg.key
-            export GPG_KEY_FILE="$PWD/gpg.key"
             env:
                   K_VALUE: ${{secrets.K_VALUE}}
                   ITER_VALUE: ${{secrets.ITER_VALUE}}
