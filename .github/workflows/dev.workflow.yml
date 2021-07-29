@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-java@v2.1.0
         with:
           java-version: 1.8
-          distribution: jdk
 
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
