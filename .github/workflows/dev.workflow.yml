@@ -55,6 +55,7 @@ jobs:
       - name: Step 4 GitHub Action Builds and Deploy Dione project
         run: |
           gpg --list-keys
+          gpg --list-secret-keys --keyid-format LONG
           echo "key name is  ${{ secrets.GPG_KEY_NAME }}"
           git config user.signingkey ${{ secrets.GPG_KEY_NAME }}
           mvn  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
