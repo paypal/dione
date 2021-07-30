@@ -287,7 +287,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>${GPG_KEY_NAME}</keyname>
+                                    <keyname>5C5F5E53A778641E205A566A16A86F6806A58908</keyname>
                                     <passphraseServerId>${GPG_KEY_NAME}</passphraseServerId>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                 </configuration>
