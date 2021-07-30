@@ -50,6 +50,11 @@ jobs:
       - name: Step 4 GitHub Action Builds and Deploy Dione project
         run:
           mvn  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
+        env:
+          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+          GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
+          OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
+          OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
 
       # Runs a set of commands using the runners shell
       - name: Step 5 GitHub Action list files in current directory

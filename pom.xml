@@ -287,8 +287,8 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>${{secrets.GPG_KEY_NAME}}</keyname>
-                                    <passphrase>${{secrets.GPG_PASSPHRASE}}</passphrase>
+                                    <keyname>${GPG_KEY_NAME}</keyname>
+                                    <passphrase>${GPG_PASSPHRASE}</passphrase>
                                 </configuration>
                             </execution>
                         </executions>
