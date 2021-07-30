@@ -49,7 +49,8 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 4 GitHub Action Builds and Deploy Dione project
         run: |
-          export GPG_KEY_FILE="$PWD/gpg.key"
+          gpg --list-keys
+          git config user.signingkey 5C5F5E53A778641E205A566A16A86F6806A58908
           mvn  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
           GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
