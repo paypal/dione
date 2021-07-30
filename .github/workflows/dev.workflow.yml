@@ -45,7 +45,7 @@ jobs:
            chmod 644 /home/runner/.gnupg/pubring.kbx
            chmod 600 /home/runner/.gnupg/trustdb.gpg
            chmod 644 /home/runner/.gnupg/gpg.pub
-           export GPG_TTY=$(tty)
+           gpg --import gpg.pub
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out gpg.key -k ${{secrets.K_VALUE}}
             ls -l
             gpg --import -no-tty --batch --yes gpg.key
