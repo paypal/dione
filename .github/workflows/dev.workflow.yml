@@ -40,7 +40,9 @@ jobs:
            mkdir -p /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
            cp pubring.kbx /home/runner/.gnupg/
+           cp trustdb.gpg /home/runner/.gnupg/
            chmod 644 /home/runner/.gnupg/pubring.kbx
+           chmod 600 home/runner/.gnupg/trustdb.gpg
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out gpg.key -k ${{secrets.K_VALUE}}
             ls -l
             gpg --import -no-tty --batch --yes gpg.key
