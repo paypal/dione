@@ -59,7 +59,7 @@ jobs:
            export GPG_KEY_FILE=gpg.key
            gpg2 --import gpg.key
            echo "starting build ..."
-           ls -l /home/runner/.gnupg/gpg.key
+           ls -l gpg.key
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
           ITER_VALUE: ${{secrets.ITER_VALUE}}
