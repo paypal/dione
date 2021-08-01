@@ -6,18 +6,4 @@
             <password>${OSSRH_PASSWORD}</password>
         </server>
     </servers>
-    <profiles>
-        <profile>
-            <id>ossrh</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <gpg.keyname>${GPG_KEY_NAME}</gpg.keyname>
-                <gpg.passphrase>${GPG_PASSPHRASE}}</gpg.passphrase>
-                <gpg.homedir>/home/runner/.gnupg</gpg.homedir>
-            </properties>
-        </profile>
-    </profiles>
-    <activeProfiles/>
 </settings>

@@ -60,9 +60,10 @@ jobs:
       - name: Step 4 GitHub Action Builds and Deploy Dione project
         run: |
           echo "starting build ..."
+          echo ${GPG_KEY_NAME}
           mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
-          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+          GPG_KEY_NAME: ${{secrets.GPG_KEY_NAME}}
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}

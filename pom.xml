@@ -273,10 +273,6 @@
     <profiles>
         <profile>
             <id>publish</id>
-            <activation>
-              <activeByDefault>true</activeByDefault>
-            </activation>
-
             <build>
                 <plugins>
                     <plugin>
@@ -293,7 +289,6 @@
                                 <configuration>
                                     <keyname>${GPG_KEY_NAME}</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
-                                    <homedir>/home/runner/.gnupg</homedir>
                                 </configuration>
                             </execution>
                         </executions>
@@ -301,7 +296,5 @@
                 </plugins>
             </build>
         </profile>
-
     </profiles>
-
 </project>
