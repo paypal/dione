@@ -51,6 +51,7 @@ jobs:
             gpg --import -no-tty --batch --yes /home/runner/.gnupg/gpg.key
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
             gpg --list-secret-keys --keyid-format=long
+            git config user.signingkey 16A86F6806A58908
 
 
       # Runs a set of commands using the runners shell
