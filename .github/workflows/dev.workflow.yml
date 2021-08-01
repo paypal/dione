@@ -51,8 +51,8 @@ jobs:
            chmod 600 /home/runner/.gnupg/trustdb.gpg
            chmod 644 /home/runner/.gnupg/gpg.pub
            gpg2 --import  /home/runner/.gnupg/gpg.pub
-           gpg2 --no-tty to gpg--delete-key 06A58908
-           gpg2 --no-tty to gpg --delete-secret-key 06A58908
+           gpg2 --no-tty  --delete-key 06A58908
+           gpg2 --no-tty  --delete-secret-key 06A58908
            gpg2 --list-secret-keys --keyid-format long
            gpg2 --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
