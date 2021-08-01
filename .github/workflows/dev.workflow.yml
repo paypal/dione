@@ -56,14 +56,19 @@ jobs:
            gpgconf --kill gpg-agent
            ls -l /home/runner/.gnupg/
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
+            sleep 5
            gpg2 --list-secret-keys --keyid-format long
+           sleep 5
            gpg2 --list-signatures --keyid-format short
+            sleep 5
            openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
+            sleep 5
            ls -l /home/runner/.gnupg/gpg.key
            chmod 666 /home/runner/.gnupg/gpg.key
            ls -l /home/runner/.gnupg/gpg.key
            export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
            gpg2 --armor --import /home/runner/.gnupg/gpg.key
+            sleep 5
            echo "starting build ..."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
