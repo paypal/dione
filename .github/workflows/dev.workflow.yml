@@ -69,7 +69,7 @@ jobs:
            ls -l gpg.key
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
-          ITER_VALUE: ${{secrets.ITER_VALUE}}
+          #ITER_VALUE: ${{secrets.ITER_VALUE}}
           K_VALUE: ${{secrets.K_VALUE}}
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
