@@ -61,9 +61,7 @@ jobs:
            ls -l /home/runner/.gnupg/gpg.key
            chmod 666 /home/runner/.gnupg/gpg.key
            ls -l /home/runner/.gnupg/gpg.key
-           export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
            gpg2 --list-secret-keys --keyid-format long
-           gpg2 --armor --import /home/runner/.gnupg/gpg.key
            echo "starting build ..."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
