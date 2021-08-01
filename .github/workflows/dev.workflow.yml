@@ -36,8 +36,8 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
+       - shell: bash
         run: |
-           bash
            set -vx
            export GPG_TTY=$(tty)
            sudo apt-get  update
