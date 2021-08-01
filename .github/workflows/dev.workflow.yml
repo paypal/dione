@@ -42,7 +42,7 @@ jobs:
            sudo apt-get install -y  gnupg2
            openssl version
            gpg2 --version
-           #gpg2
+           gpg2
            #rm -rf /home/runner/.gnupg/*
            #mkdir /home/runner/.gnupg/
            #chmod 700 /home/runner/.gnupg/
@@ -53,7 +53,7 @@ jobs:
            #chmod 644 /home/runner/.gnupg/pubring.gpg
            #mkdir -p /home/runner/.gnupg/private-keys-v1.d
            #chmod 700 /home/runner/.gnupg/private-keys-v1.d
-           gpgconf --kill gpg-agent
+           gpg2conf --kill gpg-agent
            ls -l /home/runner/.gnupg/
            export GPG_TTY=$(tty)
            gpg2 --import  pubring.gpg
