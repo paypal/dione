@@ -51,32 +51,17 @@ jobs:
             gpg --list-secret-keys --keyid-format=long
             gpg --list-signatures --keyid-format short
             git config user.signingkey ${{ secrets.GPG_KEY_NAME }}
+            echo "starting build ..."
+            echo ${GPG_KEY_NAME}
+            export GPG_TTY=$(tty)
+            gpg --import /home/runner/.gnupg/gpg.key
+            mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
-           GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
-           ITER_VALUE: ${{secrets.ITER_VALUE}}
-           K_VALUE: ${{secrets.K_VALUE}}
-
-      # Runs a set of commands using the runners shell
-      - name: Step 4 GitHub Action Builds and Deploy Dione project
-        run: |
-          echo "starting build ..."
-          echo ${GPG_KEY_NAME}
-          export GPG_TTY=$(tty)
-          gpg --import /home/runner/.gnupg/gpg.key
-          mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
-        env:
+          ITER_VALUE: ${{secrets.ITER_VALUE}}
+          K_VALUE: ${{secrets.K_VALUE}}
           GPG_KEY_NAME: ${{secrets.GPG_KEY_NAME}}
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
 
-      # Runs a set of commands using the runners shell
-      - name: Step 5 GitHub Action list files in current directory
-        run:
-          ls -a
-
-     # Runs a set of commands using the runners shell
-      - name: Step 6 GitHub Action list files in current  target directory
-        run: |
-          cd target
-          ls -a
+    
