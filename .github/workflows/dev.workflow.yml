@@ -38,8 +38,8 @@ jobs:
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
            set -x
-           apt-get install update
-           apt-get install -y  gnupg2
+           sudo apt-get install update
+           sudo apt-get install -y  gnupg2
            mkdir /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
            cp pubring.kbx /home/runner/.gnupg/
