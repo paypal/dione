@@ -56,7 +56,7 @@ jobs:
             echo ${GPG_KEY_NAME}
             export GPG_TTY=$(tty)
             ls -l /home/runner/.gnupg/gpg.key
-            gpg --import /home/runner/.gnupg/gpg.key
+            # gpg --import /home/runner/.gnupg/gpg.key
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
           ITER_VALUE: ${{secrets.ITER_VALUE}}
