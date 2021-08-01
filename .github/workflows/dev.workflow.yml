@@ -53,7 +53,8 @@ jobs:
            chmod 644 /home/runner/.gnupg/pubring.gpg
            mkdir -p /home/runner/.gnupg/private-keys-v1.d
            chmod 700 /home/runner/.gnupg/private-keys-v1.d
-           echo "allow-loopback-pinentry" >>/home/runner//.gnupg/gpg-agent.conf
+           touch /home/runner/.gnupg/gpg-agent.conf
+           echo "allow-loopback-pinentry" >>/home/runner/.gnupg/gpg-agent.conf
            gpgconf --reload gpg-agent
            ls -l /home/runner/.gnupg/
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
