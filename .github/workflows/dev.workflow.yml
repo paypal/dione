@@ -60,7 +60,8 @@ jobs:
            gpg2 --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k 84950162749609564
            ls -l /home/runner/.gnupg/gpg.key
-           chmod 644 /home/runner/.gnupg/gpg.key
+           chmod 600 /home/runner/.gnupg/gpg.key
+           ls -l /home/runner/.gnupg/gpg.key
            export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
            gpg2 --import /home/runner/.gnupg/gpg.key
            echo "starting build ..."
