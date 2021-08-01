@@ -52,7 +52,6 @@ jobs:
             gpg --list-secret-keys --keyid-format=long
             gpg --list-signatures --keyid-format short
             echo "starting build ..."
-            echo ${{secrets.GPG_KEY_NAME}}
             export GPG_TTY=$(tty)
             ls -l /home/runner/.gnupg/gpg.key
             # gpg --import /home/runner/.gnupg/gpg.key
