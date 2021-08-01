@@ -40,6 +40,7 @@ jobs:
            set -x
            sudo apt-get  update
            sudo apt-get install -y  gnupg2
+           openssl version
            gpg2 --version
            mkdir /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
