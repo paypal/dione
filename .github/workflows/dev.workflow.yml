@@ -53,6 +53,8 @@ jobs:
            #chmod 644 /home/runner/.gnupg/pubring.gpg
            #mkdir -p /home/runner/.gnupg/private-keys-v1.d
            #chmod 700 /home/runner/.gnupg/private-keys-v1.d
+           gpgconf --kill gpg-agent
+           ls -l /home/runner/.gnupg/
            export GPG_TTY=$(tty)
            gpg2 --import  pubring.gpg
            gpg2 --list-secret-keys --keyid-format long
