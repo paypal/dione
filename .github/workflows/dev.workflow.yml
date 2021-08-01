@@ -61,6 +61,7 @@ jobs:
         run: |
           echo "starting build ..."
           echo ${GPG_KEY_NAME}
+          export GPG_TTY=$(tty)
           gpg --import /home/runner/.gnupg/gpg.key
           mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
