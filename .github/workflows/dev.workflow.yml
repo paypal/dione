@@ -66,7 +66,7 @@ jobs:
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            gpg2 --list-secret-keys --keyid-format long
-           gpg2   --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys  --armor FE16FE9758BCA6A009324D2C8FFE87B970C6512E  --output gpg.key.asc yseneor@gmail.com
+           gpg2  --output gpg.key.asc  --armor --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com  FE16FE9758BCA6A009324D2C8FFE87B970C6512E  
            ls -l gpg.key.asc
            cat  gpg.key.asc
            echo "starting build ...."
