@@ -53,16 +53,16 @@ jobs:
            chmod 644 /home/runner/.gnupg/pubring.gpg
            mkdir -p /home/runner/.gnupg/private-keys-v1.d
            chmod 700 /home/runner/.gnupg/private-keys-v1.d
-           sudo gpgconf --kill gpg-agent
+           gpgconf --kill gpg-agent
            ls -l /home/runner/.gnupg/
            export GPG_TTY=$(tty)
-           sudo gpg2 --import  pubring.gpg
-           sudo gpg2 --list-secret-keys --keyid-format long
-           sudo gpg2 --list-signatures --keyid-format short
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out gpg.key -k ${K_VALUE}
+           gpg2 --import  pubring.gpg
+           gpg2 --list-secret-keys --keyid-format long
+           gpg2 --list-signatures --keyid-format short
+           openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
            ls -l gpg.key
-           export GPG_KEY_FILE=gpg.key
-           sudo gpg2 --import gpg.key
+           export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
+           gpg2 --import /home/runner/.gnupg/gpg.key
            echo "starting build ..."
            ls -l gpg.key
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
