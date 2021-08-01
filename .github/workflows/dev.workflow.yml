@@ -38,7 +38,7 @@ jobs:
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
            set -x
-           sudo apt-get install update
+           sudo apt-get  update
            sudo apt-get install -y  gnupg2
            gpg --version
            mkdir /home/runner/.gnupg/
