@@ -46,13 +46,13 @@ jobs:
            #rm -rf /home/runner/.gnupg/*
            #mkdir /home/runner/.gnupg/
            #chmod 700 /home/runner/.gnupg/
-           #cp pubring.gpg /home/runner/.gnupg/
-           #cp trustdb.gpg /home/runner/.gnupg/
-           #chmod 644 /home/runner/.gnupg/pubring.gpg
-           #chmod 600 /home/runner/.gnupg/trustdb.gpg
-           #chmod 644 /home/runner/.gnupg/pubring.gpg
-           #mkdir -p /home/runner/.gnupg/private-keys-v1.d
-           #chmod 700 /home/runner/.gnupg/private-keys-v1.d
+           cp pubring.gpg /home/runner/.gnupg/
+           cp trustdb.gpg /home/runner/.gnupg/
+           chmod 644 /home/runner/.gnupg/pubring.gpg
+           chmod 600 /home/runner/.gnupg/trustdb.gpg
+           chmod 644 /home/runner/.gnupg/pubring.gpg
+           mkdir -p /home/runner/.gnupg/private-keys-v1.d
+           chmod 700 /home/runner/.gnupg/private-keys-v1.d
            gpgconf --kill gpg-agent
            ls -l /home/runner/.gnupg/
            export GPG_TTY=$(tty)
