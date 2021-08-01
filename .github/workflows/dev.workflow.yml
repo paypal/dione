@@ -60,7 +60,7 @@ jobs:
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
            gpg2 --list-secret-keys --keyid-format long
            gpg2 --list-signatures --keyid-format short
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${{secrets.K_VALUE}}
+           openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k 84950162749609564
            ls -l /home/runner/.gnupg/gpg.key/gpg.key
            chmod 644 /home/runner/.gnupg/gpg.key
            export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
@@ -70,7 +70,7 @@ jobs:
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
           #ITER_VALUE: ${{secrets.ITER_VALUE}}
-          K_VALUE: ${{secrets.K_VALUE}}
+          #K_VALUE: ${{secrets.K_VALUE}}
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
