@@ -51,9 +51,11 @@ jobs:
             gpg --import -no-tty --batch --yes /home/runner/.gnupg/gpg.key
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
             gpg --list-secret-keys --keyid-format=long
-            git config user.signingkey 16A86F6806A58908
-
-
+            gpg --list-signatures --keyid-format short
+            git config user.signingkey ${{ secrets.GPG_KEY_NAME }}
+        env:
+           GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+           
       # Runs a set of commands using the runners shell
       - name: Step 4 GitHub Action Builds and Deploy Dione project
         run: |
