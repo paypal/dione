@@ -2,9 +2,6 @@
     <servers>
         <server>
             <id>ossrh</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <username>${OSSRH_USERNAME}</username>
             <password>${OSSRH_PASSWORD}</password>
         </server>
@@ -17,8 +14,6 @@
             </activation>
             <properties>
                 <gpg.keyname>${GPG_KEY_NAME}</gpg.keyname>
-                <gpg.secretKeyring>/home/runner/.gnupg/gpg.key</gpg.secretKeyring>
-                <gpg.publicKeyring>/home/runner/.gnupg/gpg.pub</gpg.publicKeyring>
                 <gpg.passphrase>${GPG_PASSPHRASE}}</gpg.passphrase>
                 <gpg.homedir>/home/runner/.gnupg</gpg.homedir>
             </properties>
