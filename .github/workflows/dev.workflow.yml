@@ -45,13 +45,15 @@ jobs:
            chmod 600 /home/runner/.gnupg/trustdb.gpg
            chmod 644 /home/runner/.gnupg/gpg.pub
            gpg --import  /home/runner/.gnupg/gpg.pub
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${{secrets.K_VALUE}}
+           openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
             gpg --list-secret-keys --keyid-format=long
             gpg --list-signatures --keyid-format short
             git config user.signingkey ${{ secrets.GPG_KEY_NAME }}
         env:
            GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+           ITER_VALUE: ${{secrets.ITER_VALUE}}
+           K_VALUE: ${{secrets.K_VALUE}}
 
       # Runs a set of commands using the runners shell
       - name: Step 4 GitHub Action Builds and Deploy Dione project
