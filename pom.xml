@@ -287,7 +287,6 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>yseneor</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                 </configuration>
                             </execution>
