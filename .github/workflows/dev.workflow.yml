@@ -40,11 +40,11 @@ jobs:
            set -vx
            export GPG_TTY=$(tty)
            sudo apt-get  update
-           sudo apt-get install -y  gnupg
+           sudo apt-get install -y  gnupg2
            openssl version
            whoami
-           gpg --version
-           gpg   --list-keys
+           gpg2 --version
+           gpg2   --list-keys
            rm -rf /home/runner/.gnupg/*
            cp gpg.conf /home/runner/.gnupg/
            cp pubring.gpg /home/runner/.gnupg/
@@ -59,16 +59,16 @@ jobs:
            gpgconf --kill gpg-agent
            gpgconf --reload gpg-agent
            ls -l /home/runner/.gnupg/
-           gpg --import  /home/runner/.gnupg/pubring.gpg
+           gpg2 --import  /home/runner/.gnupg/pubring.gpg
            #gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
-           gpg --armor  --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys FE16FE9758BCA6A009324D2C8FFE87B970C6512E  -o gpg.key.asc
+           gpg2 --list-secret-keys --keyid-format long
+           gpg2 --armor  --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys FE16FE9758BCA6A009324D2C8FFE87B970C6512E  -o gpg.key.asc
            ls -l gpg.key.asc
            cat  gpg.key.asc
-           gpg --list-secret-keys --keyid-format long
            echo "starting build ...."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
