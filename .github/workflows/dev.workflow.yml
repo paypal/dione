@@ -48,6 +48,7 @@ jobs:
            gpg --import  /home/runner/.gnupg/gpg.pub
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${{secrets.K_VALUE}}
            ls -l
+            ls -lR /home/runner/.gnupg/
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
             gpg --list-secret-keys --keyid-format=long
             gpg --list-signatures --keyid-format short
