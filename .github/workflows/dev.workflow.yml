@@ -58,9 +58,6 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 4 GitHub Action Builds and Deploy Dione project
         run: |
-          echo "verifying key"
-          gpg --edit-key ${{ secrets.GPG_KEY_NAME }}
-          sleep 5
           echo "starting build ..."
           mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
