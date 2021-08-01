@@ -51,7 +51,6 @@ jobs:
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
             gpg --list-secret-keys --keyid-format=long
             gpg --list-signatures --keyid-format short
-            git config user.signingkey ${{ secrets.GPG_KEY_NAME }}
             echo "starting build ..."
             echo ${{secrets.GPG_KEY_NAME}}
             export GPG_TTY=$(tty)
@@ -61,7 +60,6 @@ jobs:
         env:
           ITER_VALUE: ${{secrets.ITER_VALUE}}
           K_VALUE: ${{secrets.K_VALUE}}
-          GPG_KEY_NAME: ${{secrets.GPG_KEY_NAME}}
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}

@@ -287,7 +287,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>reiuretu</keyname>
+                                    <keyname>16A86F6806A58908</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                 </configuration>
                             </execution>
