@@ -276,6 +276,9 @@
             <activation>
               <activeByDefault>true</activeByDefault>
             </activation>
+            <systemPropertyVariables>
+                <gpg.homedir>/home/runner/.gnupg</gpg.homedir>
+              </systemPropertyVariables>
             <build>
                 <plugins>
                     <plugin>
@@ -293,7 +296,6 @@
                                     <keyname>${gpg.keyname}</keyname>
                                     <passphraseServerId>${gpg.keyname}</passphraseServerId>
                                     <passphrase>${gpg.passphrase}</passphrase>
-                                    <homedir>/home/runner/.gnupg/</homedir>
                                 </configuration>
                             </execution>
                         </executions>
