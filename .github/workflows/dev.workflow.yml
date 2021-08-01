@@ -37,6 +37,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
+           set -x
            mkdir /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
            cp pubring.kbx /home/runner/.gnupg/
@@ -63,5 +64,3 @@ jobs:
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
-
-    
