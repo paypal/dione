@@ -50,6 +50,7 @@ jobs:
             ls -l
             gpg --import -no-tty --batch --yes /home/runner/.gnupg/gpg.key
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
+            gpg --list-secret-keys --keyid-format=long
 
 
       # Runs a set of commands using the runners shell
@@ -58,8 +59,8 @@ jobs:
           echo "starting build ..."
           mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
-          gpg.keyname: ${{ secrets.GPG_KEY_NAME }}
-          gpg.passphrase: ${{secrets.GPG_PASSPHRASE}}
+          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+          GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
 
