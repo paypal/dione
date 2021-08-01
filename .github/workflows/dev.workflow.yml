@@ -36,7 +36,6 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
-      - shell: bash
         run: |
            set -vx
            export GPG_TTY=$(tty)
@@ -66,7 +65,7 @@ jobs:
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
-           gpg --armor  --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys 70C6512E  > gpg.key.asc
+           gpg --armor  --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys 70C6512E \> gpg.key.asc
            ls -l gpg.key.asc
            cat  gpg.key.asc
            gpg --list-secret-keys --keyid-format long
