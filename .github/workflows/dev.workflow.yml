@@ -61,6 +61,7 @@ jobs:
         run: |
           echo "starting build ..."
           echo ${GPG_KEY_NAME}
+          gpg --import /home/runner/.gnupg/gpg.key
           mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
           GPG_KEY_NAME: ${{secrets.GPG_KEY_NAME}}
