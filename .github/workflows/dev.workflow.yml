@@ -58,8 +58,8 @@ jobs:
           echo "starting build ..."
           mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
-          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
-          GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
+          gpg.keyname: ${{ secrets.GPG_KEY_NAME }}
+          gpg.passphrase: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
 

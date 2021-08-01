@@ -290,9 +290,9 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>${GPG_KEY_NAME}</keyname>
-                                    <passphraseServerId>${GPG_KEY_NAME}</passphraseServerId>
-                                    <passphrase>${GPG_PASSPHRASE}</passphrase>
+                                    <keyname>${gpg.keyname}</keyname>
+                                    <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                                    <passphrase>${gpg.passphrase}</passphrase>
                                     <homedir>/home/runner/.gnupg/</homedir>
                                 </configuration>
                             </execution>
