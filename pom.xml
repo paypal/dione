@@ -293,6 +293,7 @@
                                     <keyname>${GPG_KEY_NAME}</keyname>
                                     <passphraseServerId>${GPG_KEY_NAME}</passphraseServerId>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
+                                    <homedir>/home/runner/.gnupg/</homedir>
                                 </configuration>
                             </execution>
                         </executions>
