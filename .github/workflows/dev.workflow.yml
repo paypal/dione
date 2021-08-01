@@ -46,6 +46,7 @@ jobs:
            gpg --version
            gpg   --list-keys
            rm -rf /home/runner/.gnupg/*
+           cp gpg.conf /home/runner/.gnupg/
            cp pubring.gpg /home/runner/.gnupg/
            cp trustdb.gpg /home/runner/.gnupg/
            chmod 644 /home/runner/.gnupg/pubring.gpg
