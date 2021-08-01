@@ -2,20 +2,27 @@
     <servers>
         <server>
             <id>ossrh</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <username>${OSSRH_USERNAME}</username>
             <password>${OSSRH_PASSWORD}</password>
         </server>
-        <server>
-            <id>gpg.passphrase</id>
-            <passphrase>${GPG_PASSPHRASE}</passphrase>
-        </server>
-        <server>
-            <id>gpg.keyname</id>
-              <keyname>${GPG_KEY_NAME}</keyname>
-        </server>
-        <server>
-            <id>gpg.homedir</id>
-            <homedir>/home/runner/.gnupg</homedir>
-        </server>
     </servers>
+    <profiles>
+        <profile>
+            <id>ossrh</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <gpg.keyname>${GPG_KEY_NAME}</gpg.keyname>
+                <gpg.secretKeyring>/home/runner/.gnupg/gpg.key</gpg.secretKeyring>
+                <gpg.publicKeyring>/home/runner/.gnupg/gpg.pub</gpg.publicKeyring>
+                <gpg.passphrase>${GPG_PASSPHRASE}}</gpg.passphrase>
+                <gpg.homedir>/home/runner/.gnupg</gpg.homedir>
+            </properties>
+        </profile>
+    </profiles>
+    <activeProfiles/>
 </settings>
