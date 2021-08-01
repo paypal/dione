@@ -37,16 +37,15 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
-           set -x
+           set -vx
+           export GPG_TTY=$(tty)
            sudo apt-get  update
            sudo apt-get install -y  gnupg2
            openssl version
            whoami
            gpg2 --version
            gpg2   --list-keys
-           #rm -rf /home/runner/.gnupg/*
-           #mkdir /home/runner/.gnupg/
-           #chmod 700 /home/runner/.gnupg/
+           rm -rf /home/runner/.gnupg/*
            cp pubring.gpg /home/runner/.gnupg/
            cp trustdb.gpg /home/runner/.gnupg/
            chmod 644 /home/runner/.gnupg/pubring.gpg
@@ -56,17 +55,14 @@ jobs:
            chmod 700 /home/runner/.gnupg/private-keys-v1.d
            gpgconf --kill gpg-agent
            ls -l /home/runner/.gnupg/
-           export GPG_TTY=$(tty)
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
            gpg2 --list-secret-keys --keyid-format long
            gpg2 --list-signatures --keyid-format short
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out gpg.key -k 84950162749609564
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out yoni.key -k 84950162749609564
-           ls -l yoni.key
-           ls -l gpg.key
-
-           export GPG_KEY_FILE=gpg.key
-           gpg2 --import yoni.key
+           openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k 84950162749609564
+           ls -l /home/runner/.gnupg/gpg.key
+           chmod 644 /home/runner/.gnupg/gpg.key
+           export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
+           gpg2 --import /home/runner/.gnupg/gpg.key
            echo "starting build ..."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
