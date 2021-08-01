@@ -61,7 +61,7 @@ jobs:
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
-           gpg2 --armor --export-secret-keys   70C6512E > /home/runner/.gnupg/private-keys-v1.d/gpg.key.asc
+           gpg2 --armor --export-secret-keys --batch --passphrase ${{secrets.GPG_PASSPHRASE}}  70C6512E > /home/runner/.gnupg/private-keys-v1.d/gpg.key.asc
            gpg2 --list-secret-keys --keyid-format long
            echo "starting build ..."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
