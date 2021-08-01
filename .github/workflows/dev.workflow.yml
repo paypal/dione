@@ -45,10 +45,11 @@ jobs:
            chmod 644 /home/runner/.gnupg/pubring.kbx
            chmod 600 /home/runner/.gnupg/trustdb.gpg
            chmod 644 /home/runner/.gnupg/gpg.pub
-           gpg --import gpg.pub
-           openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out gpg.key -k ${{secrets.K_VALUE}}
+           gpg --import gpg.pub /home/runner/.gnupg/
+           openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${{secrets.K_VALUE}}
             ls -l
-            gpg --import -no-tty --batch --yes gpg.key
+            gpg --import -no-tty --batch --yes /home/runner/.gnupg/gpg.key
+            export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
 
 
       # Runs a set of commands using the runners shell
