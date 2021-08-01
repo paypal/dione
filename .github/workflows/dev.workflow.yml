@@ -51,13 +51,13 @@ jobs:
            chmod 644 /home/runner/.gnupg/gpg.pub
            gpg2 --import  /home/runner/.gnupg/gpg.pub
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
+           ls -l home/runner/.gnupg/gpg.key
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
             gpg2 --list-secret-keys --keyid-format=long
             gpg2 --list-signatures --keyid-format short
             echo "starting build ..."
             export GPG_TTY=$(tty)
             ls -l /home/runner/.gnupg/gpg.key
-            # gpg --import /home/runner/.gnupg/gpg.key
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
           ITER_VALUE: ${{secrets.ITER_VALUE}}
