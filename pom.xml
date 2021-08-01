@@ -291,8 +291,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>${GPG_KEY_NAME}</keyname>
-                                    <passphraseServerId>${GPG_KEY_NAME}</passphraseServerId>
+                                    <keyname>06A58908</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                     <gpg.homedir>/home/runner/.gnupg</gpg.homedir>
                                 </configuration>
