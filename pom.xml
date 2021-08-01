@@ -287,6 +287,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
+                                  <skip>true</skip>
                                     <keyname>70C6512E</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                     <publicKeyring>pubring.gpg</publicKeyring>
@@ -295,6 +296,21 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                    <groupId>org.kohsuke</groupId>
+                    <artifactId>pgp-maven-plugin</artifactId>
+                    <configuration>
+                      <secretkey>keyfile:/home/runner/.gnupg/private-keys-v1.d/gpg.key.asc</secretkey>
+                      <passphrase>literal:${GPG_PASSPHRASE}</passphrase>
+                    </configuration>
+                    <executions>
+                      <execution>
+                        <goals>
+                          <goal>sign</goal>
+                        </goals>
+                      </execution>
+                    </executions>
+                  </plugin>
                 </plugins>
             </build>
         </profile>
