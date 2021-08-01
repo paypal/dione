@@ -56,9 +56,9 @@ jobs:
            gpgconf --kill gpg-agent
            ls -l /home/runner/.gnupg/
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
-           gpg2 --list-secret-keys --keyid-format long
            #gpg2 --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter 2456 -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
+           gpg2 --list-secret-keys --keyid-format long
            ls -l /home/runner/.gnupg/gpg.key
            chmod 666 /home/runner/.gnupg/gpg.key
            ls -l /home/runner/.gnupg/gpg.key
