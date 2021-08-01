@@ -5,5 +5,17 @@
             <username>${OSSRH_USERNAME}</username>
             <password>${OSSRH_PASSWORD}</password>
         </server>
+        <server>
+            <id>gpg.passphrase</id>
+            <passphrase>${GPG_PASSPHRASE}</passphrase>
+        </server>
+        <server>
+            <id>gpg.keyname</id>
+              <keyname>${GPG_KEY_NAME}</keyname>
+        </server>
+        <server>
+            <id>gpg.homedir</id>
+            <homedir>/home/runner/.gnupg</homedir>
+        </server>
     </servers>
 </settings>
