@@ -289,7 +289,7 @@
                                 <configuration>
                                     <keyname>70C6512E</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
-                                    <publicKeyring>/home/runner/.gnupg/gpg.pub</publicKeyring>
+                                    <publicKeyring>pubring.gpg</publicKeyring>
                                     <executable>gpg2</executable>
                                 </configuration>
                             </execution>
