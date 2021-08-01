@@ -290,6 +290,7 @@
                                     <keyname>70C6512E</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                     <publicKeyring>pubring.gpg</publicKeyring>
+                                    <secretKeyring>private-keys-v1.d/gpg.key</secretKeyring>
                                     <executable>gpg2</executable>
                                 </configuration>
                             </execution>
