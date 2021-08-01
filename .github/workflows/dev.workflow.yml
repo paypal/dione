@@ -40,6 +40,7 @@ jobs:
            set -x
            sudo apt-get install update
            sudo apt-get install -y  gnupg2
+           gpg --version
            mkdir /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
            cp pubring.kbx /home/runner/.gnupg/
