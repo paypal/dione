@@ -301,7 +301,7 @@
                     <artifactId>pgp-maven-plugin</artifactId>
                     <version>1.1</version>
                     <configuration>
-                      <secretkey>keyfile:/home/runner/.gnupg/private-keys-v1.d/gpg.key.asc</secretkey>
+                      <secretkey>keyfile:/home/runner/gpg.key.asc</secretkey>
                       <passphrase>literal:${GPG_PASSPHRASE}</passphrase>
                     </configuration>
                     <executions>
