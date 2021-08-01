@@ -63,8 +63,7 @@ jobs:
            chmod 666 /home/runner/.gnupg/gpg.key
            ls -l /home/runner/.gnupg/gpg.key
            export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
-           gpg2 --export /home/runner/.gnupg/gpg.key
-           gpg2 --import /home/runner/.gnupg/gpg.key
+           #gpg2 --import /home/runner/.gnupg/gpg.key
            echo "starting build ..."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
