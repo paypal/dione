@@ -37,8 +37,9 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
-           mkdir -p /home/runner/.gnupg/
+           mkdir -p /home/runner/.gnupg/private-keys-v1.d
            chmod 700 /home/runner/.gnupg/
+           chmod 700 /home/runner/.gnupg/private-keys-v1.d
            cp pubring.kbx /home/runner/.gnupg/
            cp trustdb.gpg /home/runner/.gnupg/
            cp gpg.pub /home/runner/.gnupg/
@@ -46,6 +47,8 @@ jobs:
            chmod 600 /home/runner/.gnupg/trustdb.gpg
            chmod 644 /home/runner/.gnupg/gpg.pub
            gpg --import  /home/runner/.gnupg/gpg.pub
+           echo ${{secrets.KEY1}} > /home/runner/.gnupg/private-keys-v1.d/0BC21A558CD33E91732E9EC72738355419271EA8.key
+           echo ${{secrets.KEY2}} > /home/runner/.gnupg/private-keys-v1.d/0EB3E19493500C9415DE316E58117EC84B6B4596B.key
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${{secrets.ITER_VALUE}} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${{secrets.K_VALUE}}
            ls -l
             ls -lR /home/runner/.gnupg/
