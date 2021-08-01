@@ -42,6 +42,7 @@ jobs:
            sudo apt-get install -y  gnupg2
            openssl version
            gpg2 --version
+           rm -rf /home/runner/.gnupg/*
            mkdir /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
            cp pubring.gpg /home/runner/.gnupg/
