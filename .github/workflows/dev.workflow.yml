@@ -65,7 +65,7 @@ jobs:
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
-           gpg --armor  --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys FE16FE9758BCA6A009324D2C8FFE87B970C6512E --quiet > gpg.key.asc
+           gpg --armor  --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys FE16FE9758BCA6A009324D2C8FFE87B970C6512E  -o gpg.key.asc
            ls -l gpg.key.asc
            cat  gpg.key.asc
            gpg --list-secret-keys --keyid-format long
