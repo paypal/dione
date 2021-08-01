@@ -40,7 +40,7 @@ jobs:
            set -x
            sudo apt-get  update
            sudo apt-get install -y  gnupg2
-           gpg --version
+           gpg2 --version
            mkdir /home/runner/.gnupg/
            chmod 700 /home/runner/.gnupg/
            cp pubring.kbx /home/runner/.gnupg/
@@ -49,11 +49,11 @@ jobs:
            chmod 644 /home/runner/.gnupg/pubring.kbx
            chmod 600 /home/runner/.gnupg/trustdb.gpg
            chmod 644 /home/runner/.gnupg/gpg.pub
-           gpg --import  /home/runner/.gnupg/gpg.pub
+           gpg2 --import  /home/runner/.gnupg/gpg.pub
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/gpg.key -k ${K_VALUE}
             export GPG_KEY_FILE=/home/runner/.gnupg/gpg.key
-            gpg --list-secret-keys --keyid-format=long
-            gpg --list-signatures --keyid-format short
+            gpg2 --list-secret-keys --keyid-format=long
+            gpg2 --list-signatures --keyid-format short
             echo "starting build ..."
             export GPG_TTY=$(tty)
             ls -l /home/runner/.gnupg/gpg.key
