@@ -41,8 +41,8 @@ jobs:
            sudo apt-get  update
            sudo apt-get install -y  gnupg2
            openssl version
-           gpg2 --version
-           gpg2   --list-keys
+           sudo gpg2 --version
+           sudo gpg2   --list-keys
            #rm -rf /home/runner/.gnupg/*
            #mkdir /home/runner/.gnupg/
            #chmod 700 /home/runner/.gnupg/
@@ -53,16 +53,16 @@ jobs:
            chmod 644 /home/runner/.gnupg/pubring.gpg
            mkdir -p /home/runner/.gnupg/private-keys-v1.d
            chmod 700 /home/runner/.gnupg/private-keys-v1.d
-           gpgconf --kill gpg-agent
+           sudo gpgconf --kill gpg-agent
            ls -l /home/runner/.gnupg/
            export GPG_TTY=$(tty)
-           gpg2 --import  pubring.gpg
-           gpg2 --list-secret-keys --keyid-format long
-           gpg2 --list-signatures --keyid-format short
+           sudo gpg2 --import  pubring.gpg
+           sudo gpg2 --list-secret-keys --keyid-format long
+           sudo gpg2 --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out gpg.key -k ${K_VALUE}
            ls -l gpg.key
            export GPG_KEY_FILE=gpg.key
-           gpg2 --import gpg.key
+           sudo gpg2 --import gpg.key
            echo "starting build ..."
            ls -l gpg.key
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
