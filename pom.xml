@@ -289,8 +289,8 @@
                                 <configuration>
                                     <keyname>yseneor</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
-                                    <secretKeyring>/home/runner/.gnupg/gpg.key</secretKeyring>
                                     <publicKeyring>/home/runner/.gnupg/gpg.pub</publicKeyring>
+                                    <executable>gpg2</executable>
                                 </configuration>
                             </execution>
                         </executions>
