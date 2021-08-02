@@ -50,8 +50,8 @@ jobs:
            chmod 700  /home/runner/.gnupg/
            chmod 700  /home/runner/.gnupg/private-keys-v1.d
            rm -f  /home/runner/.gnupg/private-keys-v1.d/*
-           echo ${K417} > home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key
-           echo ${K464} > home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key
+           echo ${K417} > /home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key
+           echo ${K464} > /home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key
            chmod 600  /home/runner/.gnupg/private-keys-v1.d/*
            gpgconf --reload gpg-agent
            ls -l /home/runner/.gnupg/private-keys-v1.d/
