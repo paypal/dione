@@ -48,7 +48,7 @@ jobs:
             server-username: OSSRH_USERNAME # env variable for username in deploy
             server-password: OSSRH_PASSWORD # env variable for token in deploy
             gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }} # Value of the GPG private key to import
-            gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }} # env variable for GPG private key passphrase
+            gpg-passphrase: GPG_PASSPHRASE  # env variable for GPG private key passphrase
 
 
       # Runs a set of commands using the runners shell
