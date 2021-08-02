@@ -56,7 +56,7 @@ jobs:
            gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            gpg2 --list-secret-keys --keyid-format long
-           gp2 --export-secret-keys --armor {your_keyId}
+           gpg2 --export-secret-keys --armor 70C6512E
            exit 0
            echo "starting build ...."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
