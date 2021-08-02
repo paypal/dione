@@ -296,8 +296,8 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-            <!--            <groupId>org.kohsuke</groupId>
+                <!--     <plugin>
+                       <groupId>org.kohsuke</groupId>
                     <artifactId>pgp-maven-plugin</artifactId>
                     <version>1.1</version>
                     <configuration>
