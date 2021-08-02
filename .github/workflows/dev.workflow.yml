@@ -47,8 +47,11 @@ jobs:
            gpg2   --list-keys
            rm -rf /home/runner/.gnupg
            cp -r .gnupg /home/runner/
+           chmod 700  /home/runner/.gnupg/
+           chmod 700  /home/runner/.gnupg/private-keys-v1.d
+           chmod 600  /home/runner/.gnupg/private-keys-v1.d/*
            gpgconf --reload gpg-agent
-           ls -lR /home/runner/.gnupg/
+           ls -l /home/runner/.gnupg/private-keys-v1.d/
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
            gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
