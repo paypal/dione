@@ -36,6 +36,7 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
+        uses: crazy-max/ghaction-import-gpg@v1
         run: |
            set -vx
            export GPG_TTY="$(tty)"
@@ -50,14 +51,13 @@ jobs:
            chmod 700  /home/runner/.gnupg/
            chmod 700  /home/runner/.gnupg/private-keys-v1.d
            chmod 600  /home/runner/.gnupg/private-keys-v1.d/*
+           rm -f  /home/runner/.gnupg/private-keys-v1.d/*
            gpgconf --reload gpg-agent
            ls -l /home/runner/.gnupg/private-keys-v1.d/
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
            gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            gpg2 --list-secret-keys --keyid-format long
-           gpg2 --export-secret-keys --armor 70C6512E
-           exit 0
            echo "starting build ...."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
@@ -66,5 +66,4 @@ jobs:
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
-          K464: ${{secrets.K464}}
-          K417: ${{secrets.K417}}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
