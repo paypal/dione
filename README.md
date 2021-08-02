@@ -58,7 +58,7 @@ This special structure in addition to Avro's block level fast random-access capa
 to find a given key with minimum number of hops.
 
 # Quick Start
-Examples could also be found in our [tests](src/test/scala/com/paypal/dione/spark/index).
+Examples could also be found in our [tests](dione-spark/src/test/scala/com/paypal/dione/spark/index).
 
 ## IndexManager API
 This API is intended for an end-to-end managed solution.
