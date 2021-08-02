@@ -287,10 +287,10 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>70C6512E</keyname>
+                                <!--    <keyname>70C6512E</keyname> -->
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
-                                    <publicKeyring>pubring.gpg</publicKeyring>
-                                    <executable>gpg2</executable>
+                                  <!--  <publicKeyring>pubring.gpg</publicKeyring>
+                                    <executable>gpg2</executable>  -->
                                 </configuration>
                             </execution>
                         </executions>
