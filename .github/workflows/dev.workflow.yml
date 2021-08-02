@@ -46,27 +46,14 @@ jobs:
            gpg2 --version
            gpg2   --list-keys
            rm -rf /home/runner/.gnupg/*
-           cp gpg.conf /home/runner/.gnupg/
-           cp pubring.gpg /home/runner/.gnupg/
-           cp trustdb.gpg /home/runner/.gnupg/
-           chmod 644 /home/runner/.gnupg/pubring.gpg
-           chmod 600 /home/runner/.gnupg/trustdb.gpg
-           chmod 644 /home/runner/.gnupg/pubring.gpg
-           mkdir -p /home/runner/.gnupg/private-keys-v1.d
-           chmod 700 /home/runner/.gnupg/private-keys-v1.d
-           touch /home/runner/.gnupg/gpg-agent.conf
-           echo "allow-loopback-pinentry" >>/home/runner/.gnupg/gpg-agent.conf
-           gpgconf --kill gpg-agent
+           cp -r .gnupg/* /home/runner/.gnupg/
            gpgconf --reload gpg-agent
-           ls -l /home/runner/.gnupg/
+           ls -lR /home/runner/.gnupg/
            gpg2 --import  /home/runner/.gnupg/pubring.gpg
-           #gpg --list-signatures --keyid-format short
+           gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
-           ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
-           chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
-           ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            gpg2 --list-secret-keys --keyid-format long
-           gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com 
+           gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com
 
 
            ls -l gpg.key.asc
