@@ -286,9 +286,6 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
-                            <!--    <configuration>
-                                    <passphrase>${GPG_PASSPHRASE}</passphrase>
-                                </configuration> -->
                             </execution>
                         </executions>
                     </plugin>

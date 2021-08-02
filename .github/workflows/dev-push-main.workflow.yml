@@ -4,8 +4,7 @@ name: Dione Maven Build CI for Push to main branch  an deploy to oss sonatype sn
 
 # Controls when the workflow will run
 on:
-  pull_request:
-    branches: [ main ]
+
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ main ]
@@ -53,9 +52,8 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Step 3 Buil Dione from main branch and upload to oss sonatype snapshot repository
-        run: |
-            cat /home/runner/.m2/settings.xml
-            mvn  -e  -B -V deploy  -Ppublish --settings /home/runner/.m2/settings.xml --file pom.xml
+        run:   
+            mvn    -B -V deploy  -Ppublish
         env:
           ITER_VALUE: ${{ secrets.ITER_VALUE }}
           K_VALUE: ${{ secrets.K_VALUE }}
