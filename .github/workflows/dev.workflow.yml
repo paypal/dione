@@ -38,7 +38,7 @@ jobs:
       - name: Step 3 GitHub Action Pre Deploy Phase
         run: |
            set -vx
-           export GPG_TTY=$TTY
+           export GPG_TTY=$(tty)
            sudo apt-get  update
            sudo apt-get install -y  gnupg2
            openssl version
@@ -66,7 +66,7 @@ jobs:
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            gpg2 --list-secret-keys --keyid-format long
-           GPG_TTY=$TTY gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com 
+           gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com 
 
 
            ls -l gpg.key.asc
