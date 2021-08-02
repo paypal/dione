@@ -49,16 +49,6 @@ jobs:
            cp -r .gnupg /home/runner/
            chmod 700  /home/runner/.gnupg/
            chmod 700  /home/runner/.gnupg/private-keys-v1.d
-           rm -f  /home/runner/.gnupg/private-keys-v1.d/*
-           echo ${K417} > /home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key
-           sed 's/\$//' /home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key > /home/runner/.gnupg/private-keys-v1.d/417.key
-           mv /home/runner/.gnupg/private-keys-v1.d/417.key /home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key
-           echo ${K464} > /home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key
-           sed 's/\$//' /home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key > /home/runner/.gnupg/private-keys-v1.d/464.key
-           mv /home/runner/.gnupg/private-keys-v1.d/464.key /home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key
-           md5sum /home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key
-           md5sum /home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key
-           exit 0
            chmod 600  /home/runner/.gnupg/private-keys-v1.d/*
            gpgconf --reload gpg-agent
            ls -l /home/runner/.gnupg/private-keys-v1.d/
@@ -66,6 +56,8 @@ jobs:
            gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            gpg2 --list-secret-keys --keyid-format long
+           gp2 --export-secret-keys --armor {your_keyId}
+           exit 0
            echo "starting build ...."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
