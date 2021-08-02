@@ -287,7 +287,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                  <skip>true</skip>
+                          <!--        <skip>true</skip> -->
                                     <keyname>70C6512E</keyname>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
                                     <publicKeyring>pubring.gpg</publicKeyring>
@@ -297,7 +297,7 @@
                         </executions>
                     </plugin>
                     <plugin>
-                    <groupId>org.kohsuke</groupId>
+            <!--            <groupId>org.kohsuke</groupId>
                     <artifactId>pgp-maven-plugin</artifactId>
                     <version>1.1</version>
                     <configuration>
@@ -311,7 +311,7 @@
                         </goals>
                       </execution>
                     </executions>
-                  </plugin>
+                  </plugin> -->
                 </plugins>
             </build>
         </profile>

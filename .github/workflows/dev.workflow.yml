@@ -56,11 +56,11 @@ jobs:
            gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            gpg2 --list-secret-keys --keyid-format long
-           GPG_TTY="$(tty)" gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys 70C6512E
+          # GPG_TTY="$(tty)" gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys 70C6512E
 
 
-           ls -l gpg.key.asc
-           cat  gpg.key.asc
+           #ls -l gpg.key.asc
+           #cat  gpg.key.asc
            echo "starting build ...."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
