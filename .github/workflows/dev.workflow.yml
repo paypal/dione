@@ -66,7 +66,7 @@ jobs:
            chmod 666 /home/runner/.gnupg/private-keys-v1.d/gpg.key
            ls -l /home/runner/.gnupg/private-keys-v1.d/gpg.key
            gpg2 --list-secret-keys --keyid-format long
-           gpg --verbose --output gpg.key.asc  --armor --pinentry-mode=loopback --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com  yseneor@gmail.com
+           gpg --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys yseneor@gmail.com  yseneor@gmail.com
 
 
            ls -l gpg.key.asc
