@@ -286,12 +286,9 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
-                                <configuration>
-                                <!--    <keyname>70C6512E</keyname> -->
+                            <!--    <configuration>
                                     <passphrase>${GPG_PASSPHRASE}</passphrase>
-                                  <!--  <publicKeyring>pubring.gpg</publicKeyring>
-                                    <executable>gpg2</executable>  -->
-                                </configuration>
+                                </configuration> -->
                             </execution>
                         </executions>
                     </plugin>
