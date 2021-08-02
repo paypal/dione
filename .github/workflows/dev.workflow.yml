@@ -40,7 +40,7 @@ jobs:
            set -vx
            export GPG_TTY="$(tty)"
            sudo apt-get  update
-           sudo apt-get install -y  gnupg2 pinentry-gtk2
+           sudo apt-get install -y  gnupg2
            openssl version
            whoami
            gpg2 --version
@@ -49,6 +49,9 @@ jobs:
            cp -r .gnupg /home/runner/
            chmod 700  /home/runner/.gnupg/
            chmod 700  /home/runner/.gnupg/private-keys-v1.d
+           rm -f  /home/runner/.gnupg/private-keys-v1.d/*
+           echo ${K417} > home/runner/.gnupg/private-keys-v1.d/4173885F42A3CCAE41BEA91A3DBA93692F256A2A.key
+           echo ${K464} > home/runner/.gnupg/private-keys-v1.d/464A3C4A89B168A200C4E6454261B832D2FB55BA.key
            chmod 600  /home/runner/.gnupg/private-keys-v1.d/*
            gpgconf --reload gpg-agent
            ls -l /home/runner/.gnupg/private-keys-v1.d/
@@ -56,9 +59,6 @@ jobs:
            gpg --list-signatures --keyid-format short
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            gpg2 --list-secret-keys --keyid-format long
-           # GPG_TTY="$(tty)" gpg2 --verbose --output gpg.key.asc  --armor  --batch --passphrase ${GPG_PASSPHRASE} --export-secret-keys 70C6512E
-           #ls -l gpg.key.asc
-           #cat  gpg.key.asc
            echo "starting build ...."
             mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
         env:
@@ -67,3 +67,5 @@ jobs:
           GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
           OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
           OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
+          K464: ${{secrets.K464}}
+          K417: ${{secrets.K417}}
