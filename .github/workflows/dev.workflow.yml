@@ -53,29 +53,8 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
-        run: |
-           #set -vx
-           # export GPG_TTY="$(tty)"
-           # sudo apt-get  update
-           # sudo apt-get install -y  gnupg2
-           # openssl version
-           # whoami
-           # gpg2 --version
-           # gpg2   --list-keys
-           # rm -rf /home/runner/.gnupg
-           # cp -r .gnupg /home/runner/
-           # chmod 700  /home/runner/.gnupg/
-           # chmod 700  /home/runner/.gnupg/private-keys-v1.d
-           # chmod 600  /home/runner/.gnupg/private-keys-v1.d/*
-           # rm -f  /home/runner/.gnupg/private-keys-v1.d/*
-           # gpgconf --reload gpg-agent
-           # ls -l /home/runner/.gnupg/private-keys-v1.d/
-           #gpg2 --import  /home/runner/.gnupg/pubring.gpg
-           # gpg --list-signatures --keyid-format short
-           # openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
-           # gpg2 --list-secret-keys --keyid-format long
-           # echo "starting build ...."
-            mvn  -e  -B -V deploy -Ppublish --settings /home/runner/.m2/settings.xml --file pom.xml
+        run:
+            mvn  -e  -B -V install -DskipTests -Ppublish --settings /home/runner/.m2/settings.xml --file pom.xml
         env:
           ITER_VALUE: ${{ secrets.ITER_VALUE }}
           K_VALUE: ${{ secrets.K_VALUE }}
