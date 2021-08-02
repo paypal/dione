@@ -34,9 +34,14 @@ jobs:
           distribution: 'zulu'
           check-latest: true
 
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v1
+        env:
+           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
       # Runs a set of commands using the runners shell
       - name: Step 3 GitHub Action Pre Deploy Phase
-        uses: crazy-max/ghaction-import-gpg@v1
         run: |
            set -vx
            export GPG_TTY="$(tty)"
