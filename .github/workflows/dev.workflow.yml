@@ -40,7 +40,7 @@ jobs:
            set -vx
            export GPG_TTY="$(tty)"
            sudo apt-get  update
-           sudo apt-get install -y  gnupg2
+           sudo apt-get install -y  gnupg2 pinentry-gtk2
            openssl version
            whoami
            gpg2 --version
