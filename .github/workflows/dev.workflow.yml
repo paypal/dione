@@ -45,10 +45,10 @@ jobs:
           with: # running setup-java again overwrites the settings.xml
             java-version: 1.8
             server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
-            server-username: ${{secrets.OSSRH_USERNAME}} # env variable for username in deploy
-            server-password: ${{secrets.OSSRH_PASSWORD}} # env variable for token in deploy
-            gpg-private-key: ${{secrets.GPG_PRIVATE_KEY}} # Value of the GPG private key to import
-            gpg-passphrase: ${{secrets.GPG_PASSPHRASE}} # env variable for GPG private key passphrase
+            server-username: ${{ secrets.OSSRH_USERNAME }} # env variable for username in deploy
+            server-password: ${{ secrets.OSSRH_PASSWORD }} # env variable for token in deploy
+            gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+            gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }} # env variable for GPG private key passphrase
 
 
       # Runs a set of commands using the runners shell
@@ -75,11 +75,11 @@ jobs:
            openssl enc -d -aes-256-cbc -pbkdf2 -iter ${ITER_VALUE} -in gpg.key.enc -out /home/runner/.gnupg/private-keys-v1.d/gpg.key -k ${K_VALUE}
            gpg2 --list-secret-keys --keyid-format long
            echo "starting build ...."
-            mvn  -e  -B -V deploy -Ppublish --settings settings-ossrh.xml --file pom.xml
+            mvn  -e  -B -V deploy -Ppublish --settings settings-.xml --file pom.xml
         env:
-          ITER_VALUE: ${{secrets.ITER_VALUE}}
-          K_VALUE: ${{secrets.K_VALUE}}
-          GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
-          OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
-          OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}}
+          ITER_VALUE: ${{ secrets.ITER_VALUE }}
+          K_VALUE: ${{ secrets.K_VALUE }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
