@@ -1,13 +1,11 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Dione Maven Build CI
+name: Dione Maven Build CI for Push to main branch  an deploy to oss sonatype snapshot repository
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -52,9 +50,9 @@ jobs:
 
 
       # Runs a set of commands using the runners shell
-      - name: Step 3 GitHub Action Pre Deploy Phase
+      - name: Step 3 Buil Dione from main branch and upload to oss sonatype snapshot repository
         run:
-            mvn  -e  -B -V install -DskipTests -Ppublish --settings /home/runner/.m2/settings.xml --file pom.xml
+            mvn  -e  -B -V install  -Ppublish --settings /home/runner/.m2/settings.xml --file pom.xml
         env:
           ITER_VALUE: ${{ secrets.ITER_VALUE }}
           K_VALUE: ${{ secrets.K_VALUE }}
