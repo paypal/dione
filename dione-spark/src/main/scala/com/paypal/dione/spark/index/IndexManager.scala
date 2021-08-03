@@ -164,7 +164,7 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
    * @param key  record key
    * @return The Record as Map
    */
-  def fetch(key: Seq[String], partitionSpec: Seq[(String, String)], fields: Option[Seq[String]] = None): Option[Map[String, Any]] = {
+  def fetch(key: Seq[Any], partitionSpec: Seq[(String, String)], fields: Option[Seq[String]] = None): Option[Map[String, Any]] = {
     val partitionFolder = indexFolder + "/" + getPartitionFolder(partitionSpec)
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(partitionFolder)
     val valueOpt = avroHashBtreeFolderReader.get(key)
