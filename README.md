@@ -5,14 +5,13 @@
 Dione - an indexing Library for data on HDFS.
 
 The main offering is APIs for building an index for data on HDFS and querying the index in both:
-- _Single-row_ - `get(key)` with relatively low latency (a few seconds) depended only on HDFS.
-- _Multi-row_ - (typically up to ~1% of the size of key space) -
- relying on some processing engine (e.g Spark), retrieve values in a few minutes without processing all the data.
+- _Random Access Fetches_ - `get(key)` with near-realtime latency (in Hadoop terms), and low throughput.
+- _Batch Processing of Specific Rows_ - using Spark as a distributed processing engine, retrive subset of the data (0.1% to 100% of key space) much faster than Spark/Hive joins.
 
 ## Main Features
 - Data and index are available for batch processing.
-- Use the same technology stack for ihe Index and for the data.
-- No data duplication for indexing.
+- Use the same technology stack for the index and for the data.
+- No data duplication.
 - Support multiple indices for the same data.
 - No need to be the data owner.
 
