@@ -1,15 +1,15 @@
 package com.paypal.dione.spark.index.parquet
 
-import com.databricks.spark.avro.SchemaConverters
 import com.paypal.dione.avro.utils.GenericRecordMap
 import com.paypal.dione.hdfs.index.HdfsIndexer
 import com.paypal.dione.hdfs.index.parquet.ParquetIndexer
 import com.paypal.dione.spark.index.{IndexManagerFactory, IndexSpec, SparkIndexer}
+import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types.StructType
 
 
@@ -37,8 +37,7 @@ case class ParquetSparkIndexer(@transient spark: SparkSession) extends SparkInde
     GenericRecordMap(gr)
 
   private def getProjectedAvroSchema(structType: StructType): Schema = {
-    val builder = SchemaBuilder.record("asd")
-    SchemaConverters.convertStructToAvro(structType, builder, "dsa_ns")
+    SchemaConverters.toAvroType(structType, false, "asd", "dsa_ns")
   }
 
 }
