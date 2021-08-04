@@ -20,7 +20,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Step 1 - Checkout DIONE main branch from GitHub
+      - name: Step 1 - Checkout Dione main branch from GitHub
         uses: actions/checkout@v2
 
       # Runs a single command using the runners shell
@@ -35,4 +35,4 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 3 Buil Dione from PR branch
         run:
-            mvn  -B -V  clean install
+            mvn -B -V clean install
