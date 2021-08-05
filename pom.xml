@@ -4,7 +4,12 @@
 
     <groupId>com.paypal.dione</groupId>
     <artifactId>dione-parent</artifactId>
+    <name>Dione</name>
+    <description>an HDFS indexing library</description>
+    <url>https://github.com/paypal/dione</url>
+
     <version>0.5.0</version>
+
     <packaging>pom</packaging>
 
     <properties>
