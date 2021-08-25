@@ -3,21 +3,26 @@ package com.paypal.dione.spark.index
 import java.util.UUID
 
 import com.paypal.dione.hdfs.index.HdfsIndexContants._
+import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
+import com.paypal.dione.spark.avro.btree.SparkAvroBtreeUtils.{KEY_HASH_COLUMN, PARTITION_HASH_COLUMN}
 import com.paypal.dione.spark.index.IndexManager.PARTITION_DEF_COLUMN
 import com.paypal.dione.spark.index.avro.AvroSparkIndexer
 import com.paypal.dione.spark.index.parquet.ParquetSparkIndexer
 import com.paypal.dione.spark.index.sequence.SeqFileSparkIndexer
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
+import org.apache.spark.Partitioner
 import org.apache.spark.dione.Metrics
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{array, col, expr}
 import org.apache.spark.sql.hive.SerializableConfiguration
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.slf4j.LoggerFactory
+
+import scala.collection.mutable
 
 object IndexManagerUtils {
 
@@ -174,7 +179,7 @@ object IndexManagerUtils {
   }
 
   def initNewIndexTable(spark: SparkSession, indexSpec: IndexSpec) = {
-    val IndexSpec(dataTableName, indexTableName, keys, moreFields) = indexSpec
+    val IndexSpec(dataTableName, indexTableName, keys, moreFields, indexType) = indexSpec
 
     // resolve schema
     val cols = keys ++ moreFields
@@ -189,11 +194,14 @@ object IndexManagerUtils {
     val partitionsSchema = spark.table(dataTableName).select(partitionsKeys.map(col): _*).schema
     val partitionsSchemaStr = partitionsSchema.fields.map(field => field.name + " " + field.dataType.typeName).mkString(", ")
 
-    val tblproperties = Seq("index.meta.dataTableName" -> dataTableName, "index.meta.keys" -> keys.mkString("|"),
-      "index.meta.moreFields" -> moreFields.mkString("|")).map(t => "'" + t._1 + "'='" + t._2 + "'")
-
-    spark.sql(s"create table $indexTableName (" + schemaStr + ") partitioned by (" +
-      partitionsSchemaStr + ") stored as avro TBLPROPERTIES (" + tblproperties.mkString(",") + ")")
+    val tblproperties = Seq("index.meta.dataTableName" -> dataTableName,
+      "index.meta.keys" -> keys.mkString("|"),
+      "index.meta.moreFields" -> moreFields.mkString("|"),
+      "index.meta.type" -> indexType.storeName
+    ).map(t => "'" + t._1 + "'='" + t._2 + "'")
+    spark.sql(s"create table $indexTableName ($schemaStr) " +
+      s"partitioned by ($partitionsSchemaStr) " +
+      s"stored as ${indexType.storeName} TBLPROPERTIES (${tblproperties.mkString(",")})")
   }
 
   def getTablePartitions(tableName: String, spark: SparkSession): Seq[Seq[(String, String)]] = {
@@ -266,4 +274,60 @@ object IndexManagerUtils {
     sparkCatalogTable
   }
 
+  /**
+   * This is a custom partitioner. shuffles the data according to the keys and partition keys.
+   * Each partitionSpec contains the number of files its rows will be shuffled to, and each file will contain
+   * only keys with the same hash value. Also, files will be sorted by the keys.
+   *
+   * @param partitionsSpec static partitions definition. each entry contain the (key->value) list of a specific
+   *                       partition and number of files the partition's folder.
+   * @return repartitioned DataFrame where each partition contains only rows of the same hashkey and partition.
+   */
+  def customRepartition(df: DataFrame, keys: Seq[String],
+                        partitionsSpec: Seq[(Seq[(String, String)], Int)]): DataFrame = {
+
+    val dupPartitionValues = partitionsSpec.map(_._1).groupBy(identity).map(t => (t._1, t._2.size)).filter(_._2 > 1).keys
+    assert(dupPartitionValues.isEmpty, "Found duplicated partitions: " + dupPartitionValues)
+
+    val partitionKeys = partitionsSpec.flatMap(_._1.map(_._1)).distinct
+
+    val spark = df.sparkSession
+
+    val hashudf = spark.udf.register("hashudf",
+      AvroHashBtreeStorageFolderReader.hashModuloUdf(_: mutable.WrappedArray[String], _: Int))
+
+    // static map from partition values to (num_of_files, cumsum_num_of_files)
+    var s = 0
+    val prtsIndex: Map[Seq[String], (Int, Int)] = partitionsSpec.map(sq => {
+      val sqMap = sq._1.toMap
+      (partitionKeys.map(sqMap), sq._2)
+    }).zipWithIndex.map(t => {s+=t._1._2; (t._1._1, (t._1._2, s-t._1._2))}).toMap
+
+    val prtudf = spark.udf.register("prtudf", (prtSpec: mutable.WrappedArray[String]) =>
+      prtsIndex.getOrElse(prtSpec, (0,0)))
+
+    // for each "static" partition, we would like to have numFilesInPartition files.
+    // and because each task creates one file, we want (numFilesInPartition * numOfPartitions) tasks.
+    // moreover, we want to decide which rows are in each task, so in the reader we would know in which
+    // file to find every key.
+    val dfWithHashes = df
+      .withColumn(PARTITION_HASH_COLUMN, prtudf(array(partitionKeys.map(col): _*)))
+      .withColumn(KEY_HASH_COLUMN, hashudf(array(keys.map(col): _*), expr("prthash._1")))
+
+    val customPartitionedRDD = dfWithHashes
+      .rdd
+      .map(row => ((row.getAs[Int](KEY_HASH_COLUMN), row.getAs[Row](PARTITION_HASH_COLUMN).get(1)), row))
+      .partitionBy(new Partitioner {
+        override def numPartitions: Int = prtsIndex.values.map(_._1).sum
+
+        override def getPartition(key: Any): Int = {
+          val (hashKeyMod, prtCumSum) = key.asInstanceOf[(Int, Int)]
+          prtCumSum + hashKeyMod
+        }
+
+      })
+
+    spark.createDataFrame(customPartitionedRDD.map(_._2), dfWithHashes.schema)
+      .sortWithinPartitions((partitionKeys ++ keys).map(col):_*)
+  }
 }

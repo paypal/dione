@@ -5,7 +5,7 @@ import com.paypal.dione.hdfs.index.HdfsIndexContants._
 import com.paypal.dione.hdfs.index.HdfsIndexerMetadata
 import com.paypal.dione.hdfs.index.parquet.ParquetIndexer
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
-import com.paypal.dione.spark.index.{IndexManager, IndexSpec}
+import com.paypal.dione.spark.index.{IndexManager, IndexSpec, IndexType}
 import org.apache.hadoop.fs.Path
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
@@ -38,15 +38,15 @@ object TestParquetIndexManager extends SparkCleanTestDB {
 }
 
 @TestMethodOrder(classOf[OrderAnnotation])
-class TestParquetIndexManager {
+abstract class TestParquetIndexManager {
+  val indexType: IndexType
 
   import TestParquetIndexManager._
 
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("parquet_tbl", "index_parquet_tbl", Seq("message_id", "sub_message_id"), Seq("time_result_created")))(spark)
-    //spark.sql("desc formatted parquet_tbl").show(100, false)
+    IndexManager.createNew(IndexSpec("parquet_tbl", "index_parquet_tbl", Seq("message_id", "sub_message_id"), Seq("time_result_created"), indexType))(spark)
   }
 
   @Test
@@ -65,7 +65,11 @@ class TestParquetIndexManager {
 
     Assertions.assertEquals(1000, spark.table("index_parquet_tbl").count())
 
-    Assertions.assertEquals(List("[msg_25,sub_msg_25,2018-10-04 12:34:25,1,99,-1,null,2018-10-04]"),
+    val indexRow = indexType match {
+      case IndexType.AvroBTree => "[msg_25,sub_msg_25,2018-10-04 12:34:25,1,99,-1,null,2018-10-04]"
+      case IndexType.Parquet => "[msg_25,sub_msg_25,2018-10-04 12:34:25,1,99,-1,2018-10-04]" // no metadata col
+    }
+    Assertions.assertEquals(List(indexRow),
       indexManager.getIndex().drop("path", "file", FILE_NAME_COLUMN)
         .where("message_id='msg_25'").collect().toList.map(_.toString()))
   }
@@ -89,6 +93,7 @@ class TestParquetIndexManager {
   @Order(5)
   @Test
   def testNoSparkGetAndFetch(): Unit = {
+    if (indexType == IndexType.Parquet) return
     val basePath = baseTestPath + "hive/index_parquet_tbl/"
     val specificIndexFolder = basePath + "dt=2018-10-04"
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(specificIndexFolder)
@@ -104,9 +109,17 @@ class TestParquetIndexManager {
   @Order(6)
   @Test
   def testFetch(): Unit = {
+    if (indexType == IndexType.Parquet) return
     val indexManager = IndexManager.load("index_parquet_tbl")(spark)
     val vars = indexManager.fetch(Seq("msg_25", "sub_msg_25"), Seq("dt" -> "2018-10-04"))
     Assertions.assertEquals("var_a_25", vars.get("var1").toString)
   }
 
+}
+
+class TestParquetAvro extends TestParquetIndexManager {
+  override val indexType: IndexType = IndexType.AvroBTree
+}
+class TestParquetParquet extends TestParquetIndexManager {
+  override val indexType: IndexType = IndexType.Parquet
 }

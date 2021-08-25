@@ -6,7 +6,7 @@ import com.paypal.dione.hdfs.index.HdfsIndexerMetadata
 import com.paypal.dione.hdfs.index.avro.AvroIndexer
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
 import com.paypal.dione.spark.avro.btree.SparkAvroBtreeUtils
-import com.paypal.dione.spark.index.{IndexManager, IndexManagerUtils, IndexSpec}
+import com.paypal.dione.spark.index.{IndexManager, IndexManagerUtils, IndexSpec, IndexType}
 import org.apache.hadoop.fs.Path
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
@@ -34,14 +34,15 @@ object TestAvroIndexManager extends SparkCleanTestDB {
 }
 
 @TestMethodOrder(classOf[OrderAnnotation])
-class TestAvroIndexManager {
+abstract class TestAvroIndexManager {
+  val indexType: IndexType
 
   import TestAvroIndexManager._
 
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created")))(spark)
+    IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created"), indexType))(spark)
     spark.sql("desc formatted index_t3").show(100, false)
   }
 
@@ -128,4 +129,11 @@ class TestAvroIndexManager {
     Assertions.assertEquals(None, kvGetter.get(Seq("msg_119")))
   }
 
+}
+
+class AvroAvro extends TestAvroIndexManager {
+  override val indexType: IndexType = IndexType.AvroBTree
+}
+class AvroParquet extends TestAvroIndexManager {
+  override val indexType: IndexType = IndexType.Parquet
 }
