@@ -66,11 +66,14 @@ object SparkAvroBtreeUtils {
 
     val keysSet = keys.toSet
     val partitionKeys = partitionsSpec.flatMap(_._1.map(_._1)).distinct
-    val remainingColumns = df.columns.filterNot(c => keysSet.contains(c) || partitionKeys.contains(c))
+
+    def isReservedColumn(c: String) =
+      keysSet.contains(c) || partitionKeys.contains(c) || c == PARTITION_HASH_COLUMN || c == KEY_HASH_COLUMN
+
+    val remainingColumns = df.columns.filterNot(isReservedColumn)
 
     logger.info("writing index file to " + folderName + s" with interval: $interval, height: $height," +
       s" partitionsSpec: $partitionsSpec")
-
 
     df
       .write

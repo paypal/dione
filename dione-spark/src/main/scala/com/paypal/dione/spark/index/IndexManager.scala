@@ -210,7 +210,7 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
         val valueOpt = avroHashBtreeFolderReader.get(key)
         valueOpt.map(readPayload(_, fields))
       case _ =>
-        throw new RuntimeException("Fetch is not supported with index type " + indexType.getClass.getName)
+        throw new UnsupportedOperationException("Fetch is not supported with index type " + indexType.getClass.getName)
     }
 
   }

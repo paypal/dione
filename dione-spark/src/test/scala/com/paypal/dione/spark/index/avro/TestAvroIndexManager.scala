@@ -10,6 +10,7 @@ import com.paypal.dione.spark.index.{IndexManager, IndexManagerUtils, IndexSpec,
 import org.apache.hadoop.fs.Path
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
+import org.junit.jupiter.api.function.Executable
 
 object TestAvroIndexManager extends SparkCleanTestDB {
 
@@ -96,6 +97,7 @@ abstract class TestAvroIndexManager {
   @Order(5)
   @Test
   def testNoSparkGetAndFetch(): Unit = {
+    if (indexType == IndexType.Parquet) return
     val basePath = baseTestPath + "hive/index_t3/"
     val specificIndexFolder = basePath + "dt=2018-10-04"
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(specificIndexFolder)
@@ -112,8 +114,21 @@ abstract class TestAvroIndexManager {
   @Test
   def testFetch(): Unit = {
     val indexManager = IndexManager.load("index_t3")(spark)
-    val vars = indexManager.fetch(Seq("msg_20", "sub_msg_20"), Seq("dt" -> "2018-10-04"))
-    Assertions.assertEquals("var_a_20", vars.get("var1").toString)
+
+    def doFetch() = {
+      val vars = indexManager.fetch(Seq("msg_20", "sub_msg_20"), Seq("dt" -> "2018-10-04"))
+      Assertions.assertEquals("var_a_20", vars.get("var1").toString)
+    }
+
+    indexType match {
+      case IndexType.AvroBTree => doFetch()
+      case IndexType.Parquet =>
+        Assertions.assertThrows(classOf[UnsupportedOperationException], new Executable {
+          override def execute(): Unit = doFetch()
+        })
+    }
+
+
   }
 
   @Order(7)

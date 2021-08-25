@@ -9,6 +9,7 @@ import com.paypal.dione.spark.index.{IndexManager, IndexSpec, IndexType}
 import org.apache.hadoop.fs.Path
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
+import org.junit.jupiter.api.function.Executable
 
 object TestParquetIndexManager extends SparkCleanTestDB {
 
@@ -67,7 +68,7 @@ abstract class TestParquetIndexManager {
 
     val indexRow = indexType match {
       case IndexType.AvroBTree => "[msg_25,sub_msg_25,2018-10-04 12:34:25,1,99,-1,null,2018-10-04]"
-      case IndexType.Parquet => "[msg_25,sub_msg_25,2018-10-04 12:34:25,1,99,-1,2018-10-04]" // no metadata col
+      case IndexType.Parquet => "[msg_25,sub_msg_25,2018-10-04 12:34:25,1,99,-1,2018-10-04]" // no btree ref col
     }
     Assertions.assertEquals(List(indexRow),
       indexManager.getIndex().drop("path", "file", FILE_NAME_COLUMN)
@@ -109,10 +110,18 @@ abstract class TestParquetIndexManager {
   @Order(6)
   @Test
   def testFetch(): Unit = {
-    if (indexType == IndexType.Parquet) return
     val indexManager = IndexManager.load("index_parquet_tbl")(spark)
-    val vars = indexManager.fetch(Seq("msg_25", "sub_msg_25"), Seq("dt" -> "2018-10-04"))
-    Assertions.assertEquals("var_a_25", vars.get("var1").toString)
+    def doFetch() = {
+      val vars = indexManager.fetch(Seq("msg_25", "sub_msg_25"), Seq("dt" -> "2018-10-04"))
+      Assertions.assertEquals("var_a_25", vars.get("var1").toString)
+    }
+
+    indexType match {
+      case IndexType.AvroBTree => doFetch()
+      case IndexType.Parquet => Assertions.assertThrows(classOf[UnsupportedOperationException], new Executable {
+        override def execute(): Unit = doFetch()
+      })
+    }
   }
 
 }
