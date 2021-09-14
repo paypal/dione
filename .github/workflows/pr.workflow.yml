@@ -34,10 +34,14 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Step 3 - Build Dione from PR branch
         run:
-            mvn -B -V clean install
+            mvn -B -V clean install -DskipTests
 
       # Runs a set of commands using the runners shell
       - name: Step 4 - run Python API tests
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.6
         run: |
           python -V
+          pip install pytest pyspark=2.4.8
           pytest -v
