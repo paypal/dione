@@ -37,10 +37,11 @@ jobs:
             mvn -B -V clean install -DskipTests
 
       # Runs a set of commands using the runners shell
-      - name: Step 4 - run Python API tests
+      - name: Step 4 - setup Python env
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: 3.6
+      - name: Step 5 - run Python API tests
         run: |
           python -V
           pip install pytest pyspark=2.4.8
