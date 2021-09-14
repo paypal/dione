@@ -1,5 +1,16 @@
 from pyspark.sql import SparkSession
 from dione import IndexManager
+import shutil
+import os
+
+
+def remove_folder(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
+
+remove_folder('metastore_db')
+remove_folder('spark-warehouse')
 
 dione_jars = [
     "dione-hadoop/target/dione-hadoop-0.6.0-SNAPSHOT.jar",
