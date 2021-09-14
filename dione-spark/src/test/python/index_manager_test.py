@@ -15,7 +15,7 @@ spark_jars = [
 spark = SparkSession.builder \
     .appName("dione_python_test") \
     .enableHiveSupport() \
-    .config("spark.sql.shuffle.partitions", 5) \
+    .config("spark.sql.shuffle.partitions", 3) \
     .config("spark.jars", ",".join(dione_jars + spark_jars)) \
     .getOrCreate()
 
