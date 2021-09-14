@@ -43,6 +43,7 @@ jobs:
           python-version: 3.6
       - name: Step 5 - run Python API tests
         run: |
-          python -V
+          export PYTHONPATH=dione-spark/target/dione-spark-*-SNAPSHOT.jar
+          python -V1
           pip install pytest pyspark==2.4.8
           pytest -v
