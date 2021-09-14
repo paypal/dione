@@ -34,6 +34,10 @@ spark.sql("drop database if exists test_db cascade")
 spark.sql("create database test_db")
 spark.sql("use test_db")
 
+spark.conf.set("index.manager.btree.height", 3)
+spark.conf.set("index.manager.btree.num.parts", 10)
+spark.conf.set("index.manager.btree.interval", 20)
+
 # create dummy data
 local_data = []
 num_cols = 10
