@@ -48,6 +48,15 @@
                 <role>Committer</role>
             </roles>
         </developer>
+        <developer>
+            <id>shay1bz</id>
+            <name>Shay Elbaz</name>
+            <url>https://github.com/shay1bz</url>
+            <roles>
+                <role>Project Owner</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
     </developers>
 
     <dependencies>
