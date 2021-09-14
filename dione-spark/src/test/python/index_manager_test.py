@@ -41,19 +41,31 @@ select * from tmp_local
 
 spark.table("local_tbl_p").show()
 
+
 # index owner
-im = IndexManager.create_new(spark, "local_tbl_p", "local_tbl_p_idx", ["col0"], ["col1"])
-im.append_missing_partitions()
+def test_create():
+    IndexManager.create_new(spark, "local_tbl_p", "local_tbl_p_idx", ["col0"], ["col1"])
+
+
+def test_load():
+    IndexManager.load(spark, "local_tbl_p_idx")
+
+
+def test_append_missing_partitions():
+    im = IndexManager.load(spark, "local_tbl_p_idx")
+    im.append_missing_partitions()
+
 
 # index client
-im = IndexManager.load(spark, "local_tbl_p_idx")
-
 ## Multi-Row
-### Load by Index
-query_df = spark.table("local_tbl_p_idx").where("hash(col1) % 10 = 7")
-im.load_by_index(query_df, ["col3", "col4"]).show()
+def test_load_by_index():
+    query_df = spark.table("local_tbl_p_idx").where("hash(col1) % 10 = 7")
+    im = IndexManager.load(spark, "local_tbl_p_idx")
+    im.load_by_index(query_df, ["col3", "col4"]).show()
+
 
 ## Single-Row
-### Fetch from Index
-r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col7"])
-r.get().toString()
+def test_fetch():
+    im = IndexManager.load(spark, "local_tbl_p_idx")
+    r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col7"])
+    r.get().toString()
