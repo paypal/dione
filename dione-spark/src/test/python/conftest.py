@@ -2,6 +2,9 @@ import pytest
 from pyspark.sql import SparkSession
 import os
 import shutil
+import sys
+
+print(sys.path)
 
 
 def remove_folder(path):
