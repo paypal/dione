@@ -60,7 +60,7 @@ jobs:
       - name: run Python API tests
         run: |
           find .
-          export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
+          export PYTHONPATH=`echo target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.4.8
           pytest -v
