@@ -28,13 +28,15 @@ jobs:
 
       - name: Maven build
         run:
-            mvn -B -V clean install -DskipTests
+            mvn -B -V clean install
 
       - name: Upload jar file
         uses: actions/upload-artifact@v2
         with:
           name: dione-spark-target
-          path: dione-spark/target
+          path: |
+            dione-spark/target/*.jar
+            dione-spark/src/test/python
 
   python-tests:
     needs: build_jar
