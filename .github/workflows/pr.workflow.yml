@@ -47,8 +47,10 @@ jobs:
         python-version: [ '2.7', '3.6' ]
 
     steps:
-      - name: Download all workflow run artifacts
+      - name: Download the artifacts
         uses: actions/download-artifact@v2
+        with:
+          name: dione-spark-target
 
       - name: setup Python env
         uses: actions/setup-python@v2
