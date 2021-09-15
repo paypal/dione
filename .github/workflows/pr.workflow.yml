@@ -28,17 +28,18 @@ jobs:
 
       - name: Maven build
         run:
-            mvn -B -V clean install
+            mvn -B -V clean install -DskipTests
 
       - name: Upload jar file
         uses: actions/upload-artifact@v2
         with:
           name: dione-spark-target
           path: |
+            dione-hadoop/target/*.jar
             dione-spark/target/*.jar
             dione-spark/src/test/python
 
-  python-tests:
+  python-api-tests:
     needs: build_jar
     runs-on: ubuntu-latest
 
@@ -60,7 +61,7 @@ jobs:
       - name: run Python API tests
         run: |
           find .
-          export PYTHONPATH=`echo target/dione-spark-*-SNAPSHOT.jar`
+          export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.4.8
           pytest -v
