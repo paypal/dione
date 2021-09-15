@@ -61,6 +61,8 @@ jobs:
       - name: run Python API tests
         run: |
           find .
+          find /opt/hostedtoolcache/Python/2.7.18/x64 -name "hive-*"
+          find /opt/hostedtoolcache/Python/2.7.18/x64 -name "spark-*"
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.4.8
