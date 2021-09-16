@@ -28,7 +28,7 @@ jobs:
 
       - name: Maven build
         run:
-            mvn -B -V clean install -DskipTests
+            mvn -B -V clean install
 
       - name: Upload jar file
         uses: actions/upload-artifact@v2
@@ -59,7 +59,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
           check-latest: true
-          
+
       - name: setup Python env
         uses: actions/setup-python@v2
         with:
@@ -71,6 +71,4 @@ jobs:
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.4.8
-          find /opt/hostedtoolcache/Python/ -name "hive-*"
-          find /opt/hostedtoolcache/Python/ -name "spark-*"
           pytest -v
