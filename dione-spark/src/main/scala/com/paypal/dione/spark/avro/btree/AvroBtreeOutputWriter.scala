@@ -1,23 +1,22 @@
 package com.paypal.dione.spark.avro.btree
 
-import java.io.BufferedOutputStream
-
-import com.databricks.spark.avro.SchemaConverters
 import com.paypal.dione.avro.hadoop.file.AvroBtreeFile
 import com.paypal.dione.avro.hadoop.file.AvroBtreeFile.Writer
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader.AVRO_BTREE_SCHEMA_FILENAME
-import com.paypal.dione.spark.avro.SparkAvroUtils.createConverterToAvro
-import org.apache.avro.SchemaBuilder
 import org.apache.avro.file.CodecFactory
 import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapreduce.TaskAttemptContext
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.avro.{AvroSerializer, SchemaConverters}
 import org.apache.spark.sql.catalyst.{CatalystTypeConverters, InternalRow}
 import org.apache.spark.sql.execution.datasources.OutputWriter
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.slf4j.LoggerFactory
+
+import java.io.BufferedOutputStream
 
 class AvroBtreeOutputWriter( path: String,
                              context: TaskAttemptContext,
@@ -35,17 +34,23 @@ class AvroBtreeOutputWriter( path: String,
 
   def rowToGenericRecord(iRow: InternalRow, fields: Seq[String], converter: Any => Any) = {
     val row = internalRowConverter(iRow)
-    converter(Row.fromSeq(fields.map(row.getAs[Any]))).asInstanceOf[GenericRecord]
+    val seqany = fields.map(row.getAs[Any]).map {
+      case f: String => UTF8String.fromString(f)
+      case f => f
+    }
+    converter(InternalRow.fromSeq(seqany)).asInstanceOf[GenericRecord]
   }
 
   private lazy val internalRowConverter =
     CatalystTypeConverters.createToScalaConverter(schema).asInstanceOf[InternalRow => Row]
 
-  val keysConverter = createConverterToAvro(keysSchema, "key", jobOptions.recordNamespace)
-  private lazy val rowKeyConverter = (row:InternalRow) => rowToGenericRecord(row, jobOptions.keyFields, keysConverter)
+  val keysConverter = new AvroSerializer(keysSchema, keysAvroSchema, false)
+  private lazy val rowKeyConverter = (row:InternalRow) =>
+    rowToGenericRecord(row, jobOptions.keyFields, keysConverter.serialize)
 
-  val valuesConverter = createConverterToAvro(valuesSchema, "value", jobOptions.recordNamespace)
-  private lazy val rowValueConverter = (row:InternalRow) => rowToGenericRecord(row, jobOptions.valueFields, valuesConverter)
+  val valuesConverter = new AvroSerializer(valuesSchema, valuesAvroSchema, false)
+  private lazy val rowValueConverter = (row:InternalRow) =>
+    rowToGenericRecord(row, jobOptions.valueFields, valuesConverter.serialize)
 
   var writer: Writer = {
     val codecFactory = CodecFactory.fromString(jobOptions.compression)
@@ -87,10 +92,10 @@ class AvroBtreeOutputWriter( path: String,
     val keysSchema = StructType(schema.fields.filter(f => jobOptions.keyFields.contains(f.name)))
     val valuesSchema = StructType(schema.fields.filter(f => jobOptions.valueFields.contains(f.name)))
 
-    val avroKeysSchema = SchemaConverters.convertStructToAvro(keysSchema,
-      SchemaBuilder.record(jobOptions.keyRecordName), jobOptions.recordNamespace)
-    val avroValuesSchema = SchemaConverters.convertStructToAvro(valuesSchema,
-      SchemaBuilder.record(jobOptions.valueRecordName), jobOptions.recordNamespace)
+    val avroKeysSchema = SchemaConverters.toAvroType(keysSchema, false,
+      jobOptions.keyRecordName, jobOptions.recordNamespace)
+    val avroValuesSchema = SchemaConverters.toAvroType(valuesSchema, false,
+      jobOptions.valueRecordName, jobOptions.recordNamespace)
 
     val recordSchema = AvroBtreeFile.createSchema(avroKeysSchema, avroValuesSchema)
     val fs = schemaFilePath.getFileSystem(new Configuration())
@@ -105,8 +110,7 @@ class AvroBtreeOutputWriter( path: String,
 //  }
 
   private def createAvroSchema(_schema: StructType, recordName: String) = {
-    val builder = SchemaBuilder.record(recordName)
-    SchemaConverters.convertStructToAvro(_schema, builder, jobOptions.recordNamespace)
+    SchemaConverters.toAvroType(_schema, false, recordName, jobOptions.recordNamespace)
   }
 
 //  private def createSparkOutputMetrics = {
