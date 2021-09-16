@@ -53,6 +53,13 @@ jobs:
         with:
           name: dione-spark-target
 
+      - name: Setup Java env
+        uses: actions/setup-java@v2.1.0
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+          check-latest: true
+          
       - name: setup Python env
         uses: actions/setup-python@v2
         with:
@@ -64,6 +71,6 @@ jobs:
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.4.8
-          find /opt/hostedtoolcache/Python/2.7.18/x64 -name "hive-*"
-          find /opt/hostedtoolcache/Python/2.7.18/x64 -name "spark-*"
+          find /opt/hostedtoolcache/Python/ -name "hive-*"
+          find /opt/hostedtoolcache/Python/ -name "spark-*"
           pytest -v
