@@ -4,7 +4,6 @@ from pyspark.sql import DataFrame
 class PythonToScalaHelper(object):
 
     def __init__(self, spark):
-        #self._spark = spark
         self._jvm = spark._sc._gateway.jvm
 
     def get_object(self, fullObjectName):
@@ -64,5 +63,4 @@ class IndexManager(object):
             [self._scala_helper.to_tuple2(kv) for kv in partition_spec])
         fields_seq_opt = self._scala_helper.to_option(self._scala_helper.list_to_seq(fields))
         res = self._im.fetch(key_seq, partition_spec_tuple_seq, fields_seq_opt)
-
         return res
