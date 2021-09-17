@@ -49,6 +49,12 @@ def test_load(spark_session):
 
 
 @pytest.mark.usefixtures("spark_session")
+def test_append_new_partitions(spark_session):
+    im = IndexManager.load(spark_session, "local_tbl_p_idx")
+    im.append_new_partitions([[('dt', '2021-09-14')]])
+
+
+@pytest.mark.usefixtures("spark_session")
 def test_append_missing_partitions(spark_session):
     im = IndexManager.load(spark_session, "local_tbl_p_idx")
     im.append_missing_partitions()

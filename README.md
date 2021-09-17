@@ -16,7 +16,8 @@ The main offering is APIs for building an index for data on HDFS and querying th
 - No need to be the data owner.
 
 ## Quick Start
-See our [Quick Start](docs/quick_start.md) guide.
+Check out our [Quick Start](docs/quick_start.md) or [Quick Start Python](docs/quick_start.md) guides.
+
 
 ## Detailed Documentation
 Please refer to our [Dione documentation](docs/detailed_doc.md).

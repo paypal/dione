@@ -102,7 +102,8 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
    */
   def appendMissingPartitions(): Unit = {
     val missingPrts = getMissingPartitions()
-    appendNewPartitions(missingPrts)
+    if (missingPrts.nonEmpty)
+      appendNewPartitions(missingPrts)
   }
 
    /**

@@ -48,6 +48,12 @@ class IndexManager(object):
             .load(index_table_name, spark._jsparkSession)
         return IndexManager(spark, im)
 
+    def append_new_partitions(self, partitions_spec):
+        partitions_spec_seq = self._scala_helper.list_to_seq(
+            [self._scala_helper.list_to_seq([self._scala_helper.to_tuple2(kv) for kv in partition_spec
+                                             ]) for partition_spec in partitions_spec])
+        self._im.appendNewPartitions(partitions_spec_seq)
+
     def append_missing_partitions(self):
         self._im.appendMissingPartitions()
 
