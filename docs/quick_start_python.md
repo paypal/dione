@@ -15,11 +15,11 @@ Examples could also be found in our [tests](dione-spark/src/test/python/index_ma
   - `spark.yarn.appMasterEnv.PYTHONPATH` (if relevant)
 
 ## Creating an Index
-Define a new index on table `my_db.my_big_table` with key field `key1` and adding field `val1` also to the index table:
+Define a new index on table `my_db.my_big_table` with key field `key1` and adding field `col1` also to the index table:
 ```python
 from dione import IndexManager
 
-IndexManager.create_new(spark, "my_db.my_big_table", "my_db.my_index", ["key1"], ["val1"])
+IndexManager.create_new(spark, "my_db.my_big_table", "my_db.my_index", ["key1"], ["col1"])
 ```
 the index table `my_db.my_index` can be read as a regular Hive table. It will contain the relevant metadata per key and is
 saved by our special Avro B-Tree format.
@@ -32,7 +32,7 @@ spark.conf.set("index.manager.file.filter", "%.avro")
 indexManager = IndexManager.load(spark, "my_db.my_index")
 
 # assuming `my_db.my_big_table` is partitioned by `dt` 
-indexManager.append_new_partitions([[("dt", "2020-10-04")], [("dt" -> "2020-10-05")]])
+indexManager.append_new_partitions([[("dt", "2020-10-04")], [("dt", "2020-10-05")]])
 ```
 
 ## Using the index
@@ -42,7 +42,7 @@ Query the index and use it to fetch the data:
 indexManager = IndexManager.load(spark, "my_db.my_index")
 
 # example query
-queryDF = spark.table("my_db.my_index").where("val1 like '%foo%'")
+queryDF = spark.table("my_db.my_index").where("col1 like '%foo%'")
 
 payload_DF = indexManager.load_by_index(queryDF, ["col1", "col2"])
 ``` 
@@ -52,5 +52,6 @@ payload_DF = indexManager.load_by_index(queryDF, ["col1", "col2"])
 ### Single-Row
 Fetch a specific key:
 ```python
-data_val = indexManager.fetch(["key1"], [("dt", "2020-10-01")], ["val3"])
+# fetch column `col3` of some key
+data_val = indexManager.fetch(["key_bar"], [("dt", "2020-10-01")], ["col3"])
 ```

@@ -16,7 +16,7 @@ The main offering is APIs for building an index for data on HDFS and querying th
 - No need to be the data owner.
 
 ## Quick Start
-Check out our [Quick Start](docs/quick_start.md) or [Quick Start Python](docs/quick_start.md) guides.
+Check out our [Quick Start](docs/quick_start.md) or [Quick Start Python](docs/quick_start_python.md) guides.
 
 
 ## Detailed Documentation

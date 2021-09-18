@@ -15,14 +15,14 @@ This API is intended for an end-to-end managed solution.
 All relevant metadata is stored in the index table's `TBLPROPERTIES`.
 
 ### Creating an Index
-Define a new index on table `my_db.my_big_table` with key field `key1` and adding field `val1` also to the index table:
+Define a new index on table `my_db.my_big_table` with key field `key1` and adding field `col1` also to the index table:
 ```scala
 import com.paypal.dione.spark.index.{IndexManager, IndexSpec}
 
 IndexManager.createNew(IndexSpec(dataTableName = "my_db.my_big_table",
                                  indexTableName = "my_db.my_index",
                                  keys = Seq("key1"),
-                                 moreFields = Seq("val1")
+                                 moreFields = Seq("col1")
                       ))(spark)
 ```
 the index table `my_db.my_index` can be read as a regular Hive table. It will contain the relevant metadata per key and is
@@ -60,7 +60,7 @@ val payloadDF = indexManager.loadByIndex(queryDF, Some(Seq("col1", "col2")))
 #### Single-Row
 Fetch a specific key:
 ```scala
-val dataOpt = indexManager.fetch(Seq("key1"), Seq("dt" -> "2020-10-01"))
+val dataOpt = indexManager.fetch(Seq("key_bar"), Seq("dt" -> "2020-10-01"))
 ```
 
 ## SparkIndexer API
@@ -72,12 +72,12 @@ For example, indexing data:
 ```scala
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
-val fieldsSchema = StructType(Seq("id", "var1").map(p => StructField(p, StringType)))
+val fieldsSchema = StructType(Seq("id", "col1").map(p => StructField(p, StringType)))
 val indexedDF = AvroSparkIndexer(spark).createIndexDF(filesDF, fieldsSchema)
 ```
 Reading data using the index:
 ```scala
-val payloadSchema = StructType(Seq("var1", "var2").map(p => StructField(p, StringType)))
-val df1 = spark.table("indexed_df").where("id like '123%'")
+val payloadSchema = StructType(Seq("col1", "col2").map(p => StructField(p, StringType)))
+val df1 = spark.table("indexed_df").where("col1 like '123%'")
 AvroSparkIndexer(spark).loadByIndex(df1, payloadSchema).show()
 ```
