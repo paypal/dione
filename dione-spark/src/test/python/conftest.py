@@ -3,6 +3,7 @@ from pyspark.sql import SparkSession
 import os
 import shutil
 import sys
+import ntpath
 
 print(sys.path)
 
@@ -26,7 +27,7 @@ def spark_session():
     spark_jars = [
         "https://repo1.maven.org/maven2/com/databricks/spark-avro_2.11/4.0.0/spark-avro_2.11-4.0.0.jar",
         "https://repo1.maven.org/maven2/org/apache/parquet/parquet-avro/1.8.2/parquet-avro-1.8.2.jar",
-        "https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.0/avro-1.8.0.jar"
+        "https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.0/avro-1.8.0.jar",
     ]
 
     spark = (SparkSession.builder
@@ -35,6 +36,12 @@ def spark_session():
              .enableHiveSupport()
              .config("spark.sql.shuffle.partitions", 3)
              .config("spark.jars", ",".join(dione_jars + spark_jars))
+             .config("spark.driver.extraClassPath", ":".join([ntpath.basename(f) for f in (dione_jars + spark_jars)]))
+             .config("spark.executor.extraClassPath", ":".join([ntpath.basename(f) for f in (dione_jars + spark_jars)]))
+             # .config("spark.driver.extraClassPath", ":".join(dione_jars + spark_jars))
+             # .config("spark.executor.extraClassPath", ":".join(dione_jars + spark_jars))
+             # .config("spark.driver.userClassPathFirst", "true")
+             # .config("spark.executor.userClassPathFirst", "true")
              .getOrCreate()
              )
 

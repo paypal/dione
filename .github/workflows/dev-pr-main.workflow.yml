@@ -71,4 +71,6 @@ jobs:
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.3.4
+          ls -l /opt/hostedtoolcache/Python
+          find /opt/hostedtoolcache/Python/*/x64/lib/python2.7 "avro-*.jar"
           pytest -v
