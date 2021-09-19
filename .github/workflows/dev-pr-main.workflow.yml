@@ -71,6 +71,10 @@ jobs:
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pytest pyspark==2.3.4
-          ls -l /opt/hostedtoolcache/Python
-          find /opt/hostedtoolcache/Python/*/x64/lib/python2.7 "avro-*.jar"
+          echo ohad
+          AVRO_JAR=$(find $(dirname `which python`)/../ -name "avro-1*.jar")
+          echo $AVRO_JAR
+          wget https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.0/avro-1.8.0.jar
+          AVRO_JAR_DIR=$(dirname $AVRO_JAR)
+          mv avro-1.8.0.jar $AVRO_JAR_DIR
           pytest -v
