@@ -18,6 +18,10 @@ The main offering is APIs for building an index for data on HDFS and querying th
 ## Quick Start
 Check out our [Quick Start](docs/quick_start.md) or [Quick Start Python](docs/quick_start_python.md) guides.
 
+# Compatibility Matrix
+| Dione | Spark|
+|-------|------|
+| 0.5.x | 2.3.x|
 
 ## Detailed Documentation
 Please refer to our [Dione documentation](docs/detailed_doc.md).

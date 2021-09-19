@@ -6,7 +6,7 @@ Examples could also be found in our [tests](dione-spark/src/test/scala/com/paypa
     - `dione-spark-*.jar`
     - `dione-hadoop-*.jar`
 - Also add Avro related jars to `spark.jars`:
-    - `spark-avro_2.11-2.4.8.jar`
+    - `spark-avro_2.11-4.0.0.jar`
     - `parquet-avro-1.8.2.jar`
     - `avro-1.8.2.jar`
     
