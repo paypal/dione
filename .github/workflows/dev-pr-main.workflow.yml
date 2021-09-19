@@ -73,7 +73,7 @@ jobs:
           pip install pytest pyspark==2.3.4
           echo ohad
           AVRO_JAR=$(find $(dirname `which python`)/../ -name "avro-1*.jar")
-          rm $AVRO_JAR
+          rm -f $AVRO_JAR
           wget https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.0/avro-1.8.0.jar
           AVRO_JAR_DIR=$(dirname $AVRO_JAR)
           mv avro-1.8.0.jar $AVRO_JAR_DIR
