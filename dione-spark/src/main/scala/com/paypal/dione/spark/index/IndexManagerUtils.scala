@@ -154,7 +154,6 @@ object IndexManagerUtils {
 
     // sample:
     val tmpPath = "/tmp/" + UUID.randomUUID().toString // TODO really in /tmp ?
-    import com.databricks.spark.avro._
     val codec = spark.conf.getOption("spark.sql.avro.compression.codec")
     spark.conf.set("spark.sql.avro.compression.codec", "deflate")
     indexDF.write.format("avro").save(tmpPath)
