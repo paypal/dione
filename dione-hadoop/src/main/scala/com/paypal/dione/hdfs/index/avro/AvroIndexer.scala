@@ -2,7 +2,7 @@ package com.paypal.dione.hdfs.index.avro
 
 import com.paypal.dione.hdfs.index.{HdfsIndexer, HdfsIndexerMetadata}
 import org.apache.avro.Schema
-import org.apache.avro.file.TransparentFileReader
+import org.apache.avro.file.DataFileReader
 import org.apache.avro.generic.{GenericDatumReader, GenericRecord}
 import org.apache.avro.mapred.FsInput
 import org.apache.hadoop.conf.Configuration
@@ -10,7 +10,7 @@ import org.apache.hadoop.fs.Path
 
 case class AvroIndexer(file: Path, start: Long, end: Long, conf: Configuration) extends HdfsIndexer[GenericRecord]() {
 
-  private val fileReader = new TransparentFileReader(new FsInput(file, conf), new GenericDatumReader[GenericRecord])
+  private val fileReader = new DataFileReader(new FsInput(file, conf), new GenericDatumReader[GenericRecord])
   private var reusedRecord: GenericRecord = _
 
   override def closeCurrentFile(): Unit = {
@@ -28,7 +28,7 @@ case class AvroIndexer(file: Path, start: Long, end: Long, conf: Configuration) 
    */
   override def skip(): Unit = readNext()
 
-  private def readNext() = {
+  private def readNext(): Unit = {
     reusedRecord =
       if (reusedRecord == null)
         fileReader.next(reusedRecord)
@@ -70,17 +70,14 @@ case class AvroIndexer(file: Path, start: Long, end: Long, conf: Configuration) 
 
   def getSchema(): Schema = fileReader.getSchema
 
-  private def tryInferSize(reader: TransparentFileReader, lastPosition: Long, totalInBlock: Int): Int = {
+  private def tryInferSize(reader: DataFileReader[GenericRecord], lastPosition: Long, totalInBlock: Int): Int = {
     val pos = reader.previousSync()
-    val bytes =
+    val longSize =
       if (totalInBlock == 1) // exactly 1 row in block
         pos - lastPosition
       else { // more than 1 row in block, do rough estimate:
-        val block = reader.getCurrentBlock
-        val blockSize = block.limit() - block.arrayOffset()
-        val i = blockSize / totalInBlock // mean size in block...}
-        i
+        reader.getBlockSize /  totalInBlock
       }
-    bytes.intValue()
+    longSize.intValue()
   }
 }
