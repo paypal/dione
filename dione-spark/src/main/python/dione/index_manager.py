@@ -23,12 +23,26 @@ class PythonToScalaHelper(object):
         return scala_tuple2.apply(t[0], t[1])
 
 
+class ScalaToPythonHelper(object):
+    def __init__(self, spark):
+        self._jvm = spark._sc._gateway.jvm
+
+    def get_object(self, fullObjectName):
+        return self._jvm.java.lang.Thread.currentThread().getContextClassLoader().loadClass(fullObjectName + "$") \
+            .getField("MODULE$").get(None)
+
+    def map_to_dict(self, mp):
+        scala_converter = self.get_object("scala.collection.JavaConverters")
+        return scala_converter.mapAsJavaMapConverter(mp).asJava()
+
+
 class IndexManager(object):
 
     def __init__(self, spark, im):
         self._spark = spark
         self._im = im
         self._scala_helper = PythonToScalaHelper(spark)
+        self._python_helper = ScalaToPythonHelper(spark)
 
     @staticmethod
     def create_new(spark, data_table_name, index_table_name, keys, more_fields=None):
@@ -68,5 +82,9 @@ class IndexManager(object):
         partition_spec_tuple_seq = self._scala_helper.list_to_seq(
             [self._scala_helper.to_tuple2(kv) for kv in partition_spec])
         fields_seq_opt = self._scala_helper.to_option(self._scala_helper.list_to_seq(fields))
-        res = self._im.fetch(key_seq, partition_spec_tuple_seq, fields_seq_opt)
-        return res
+        res_opt = self._im.fetch(key_seq, partition_spec_tuple_seq, fields_seq_opt)
+        if res_opt.nonEmpty():
+            d = self._python_helper.map_to_dict(res_opt.get())
+            return d
+        else:
+            return None

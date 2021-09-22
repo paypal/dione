@@ -17,21 +17,27 @@ def test_init_data(spark_session):
     spark.conf.set("index.manager.btree.interval", 20)
 
     local_data = []
-    num_cols = 10
+    num_cols = 15
 
     for i in range(0,1000):
         local_data.append(["c"+str(i)+"_"+str(c) for c in range(0,num_cols)])
 
     cols = ["col"+str(c) for c in range(0,num_cols)]
     local_df = spark.createDataFrame(local_data, cols)
-    spark.sql("CREATE TABLE `local_tbl_p` ("+" string,".join(cols)+" string) partitioned by (dt string) stored as parquet")
+    spark.sql("CREATE TABLE `local_tbl_p` ("+" string,".join(cols)+" string" +
+              ", col_arr array<string>" +
+              ", col_map map<string, string>" +
+              ") partitioned by (dt string) stored as parquet")
     # spark.sql("CREATE TABLE `local_tbl_p` ("+" string,".join(cols)+" string) partitioned by (dt string) stored as avro")
     local_df.createOrReplaceTempView("tmp_local")
     spark.table("tmp_local").show()
 
     spark.sql("""
         insert overwrite table local_tbl_p partition (dt='2021-09-14')
-        select * from tmp_local
+        select *,
+            array(col8, col9, col10) as col_arr,
+            map(col5, col7) as col_map
+         from tmp_local
     """)
 
     spark.table("local_tbl_p").show()
@@ -73,5 +79,23 @@ def test_load_by_index(spark_session):
 @pytest.mark.usefixtures("spark_session")
 def test_fetch(spark_session):
     im = IndexManager.load(spark_session, "local_tbl_p_idx")
-    r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col7"])
-    r.get().toString()
+    r = im.fetch(["c66_0"], [("dt", "2021-09-14")], ["col12"])
+    assert(r["col12"] == "c66_12")
+
+@pytest.mark.usefixtures("spark_session")
+def test_fetch_dict(spark_session):
+    im = IndexManager.load(spark_session, "local_tbl_p_idx")
+    r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col_map"])
+    assert(dict(r["col_map"]) == {"c6_5": "c6_7"})
+
+@pytest.mark.usefixtures("spark_session")
+def test_fetch_list(spark_session):
+    im = IndexManager.load(spark_session, "local_tbl_p_idx")
+    # r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col_arr"])
+    # assert(list(r["col_arr"]) == ["c8"])
+
+@pytest.mark.usefixtures("spark_session")
+def test_fetch_none(spark_session):
+    im = IndexManager.load(spark_session, "local_tbl_p_idx")
+    r = im.fetch(["a123"], [("dt", "2021-09-14")], ["col14"])
+    assert(r is None)
