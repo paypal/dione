@@ -33,7 +33,7 @@ class ScalaToPythonHelper(object):
 
     def map_to_dict(self, mp):
         scala_converter = self.get_object("scala.collection.JavaConverters")
-        return scala_converter.mapAsJavaMapConverter(mp).asJava()
+        return dict(scala_converter.mapAsJavaMapConverter(mp).asJava())
 
 
 class IndexManager(object):
