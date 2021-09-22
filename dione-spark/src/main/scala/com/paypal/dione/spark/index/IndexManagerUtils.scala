@@ -157,11 +157,11 @@ object IndexManagerUtils {
     import com.databricks.spark.avro._
     val codec = spark.conf.getOption("spark.sql.avro.compression.codec")
     spark.conf.set("spark.sql.avro.compression.codec", "deflate")
-    indexDF.write.avro(tmpPath)
+    indexDF.write.format("avro").save(tmpPath)
     codec.foreach(spark.conf.set("spark.sql.avro.compression.codec", _))
     try {
       val sample = new {
-        val (inputSourceBytes, outputRowCount) = spark.read.avro(tmpPath).agg(
+        val (inputSourceBytes, outputRowCount) = spark.read.format("avro").load(tmpPath).agg(
           sum(SIZE_COLUMN), // infer source size by this column
           count(lit(1))) // simple row count ...
           .as[(Long, Long)].head()

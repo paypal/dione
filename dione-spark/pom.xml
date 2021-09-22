@@ -3,26 +3,26 @@
     <parent>
         <artifactId>dione-parent</artifactId>
         <groupId>com.paypal.dione</groupId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.6.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>dione-spark</artifactId>
 
     <properties>
-        <spark.version>2.3.0</spark.version>
+        <spark.version>2.4.0</spark.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.paypal.dione</groupId>
             <artifactId>dione-hadoop</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.paypal.dione</groupId>
             <artifactId>dione-hadoop</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
@@ -42,15 +42,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.databricks</groupId>
+            <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_2.11</artifactId>
-            <version>4.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>avro</artifactId>
-                    <groupId>org.apache.avro</groupId>
-                </exclusion>
-            </exclusions>
+            <version>${spark.version}</version>
         </dependency>
     </dependencies>
 
