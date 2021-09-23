@@ -48,4 +48,12 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/python</directory>
+            </resource>
+        </resources>
+    </build>
+
 </project>
