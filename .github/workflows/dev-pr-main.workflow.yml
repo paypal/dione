@@ -12,27 +12,69 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build_jar:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Step 1 - Checkout DIONE main branch from GitHub
+      - name: Checkout from GitHub
         uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Step 2 Set up JDK 1.8
+      - name: Setup Java env
         uses: actions/setup-java@v2.1.0
         with:
           java-version: '8'
           distribution: 'zulu'
           check-latest: true
 
-
-      # Runs a set of commands using the runners shell
-      - name: Step 3 Buil Dione from PR branch
+      - name: Maven build
         run:
-            mvn  -B -V  clean install
+            mvn -B -V clean install
+
+      - name: Upload jar file
+        uses: actions/upload-artifact@v2
+        with:
+          name: dione-spark-target
+          path: |
+            dione-hadoop/target/*.jar
+            dione-spark/target/*.jar
+            dione-spark/src/test/python
+
+  python-api-tests:
+    needs: build_jar
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ '2.7', '3.6' ]
+
+    steps:
+      - name: Download the artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: dione-spark-target
+
+      - name: Setup Java env
+        uses: actions/setup-java@v2.1.0
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+          check-latest: true
+
+      - name: setup Python env
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: run Python API tests
+        run: |
+          find .
+          export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
+          python -V
+          pip install pytest pyspark==2.3.4
+          echo ohad
+          AVRO_JAR=$(find $(dirname `which python`)/../ -name "avro-1*.jar")
+          rm -f $AVRO_JAR
+          wget https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.0/avro-1.8.0.jar
+          AVRO_JAR_DIR=$(dirname $AVRO_JAR)
+          mv avro-1.8.0.jar $AVRO_JAR_DIR
+          pytest -v
