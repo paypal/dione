@@ -200,7 +200,7 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
     val dataTable = spark.table(dataTableName)
 
     fields
-      .map(keys ++ moreFields ++ _)
+      .map(keys ++ _)
       .map(cols => dataTable.select(cols.map(col): _*).schema)
       .getOrElse(getAllDataFields())
   }
