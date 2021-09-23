@@ -111,7 +111,7 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
     val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
     testSamples.foreach(sample => {
       val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition))
-      Assertions.assertEquals(sample.varValue, vars.get("var1").toString)
+      Assertions.assertEquals(sample.varValue, vars.get("var1"))
       Assertions.assertEquals("List((id_col,msg_100), (meta_field,meta_100), (var1,var_a_100), (var2,100))",
         vars.get.toList.sortBy(_._1).toString)
     })
@@ -122,9 +122,10 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
   def testFetch(): Unit = {
     val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
     testSamples.foreach(sample => {
-      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition), Some(Seq("var2")))
-      Assertions.assertEquals(sample.varValue, vars.get("var1").toString)
-      Assertions.assertEquals("List((id_col,msg_100), (meta_field,meta_100), (var2,100))",
+      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition), Some(Seq("var1")))
+      Assertions.assertEquals(sample.varValue, vars.get("var1"))
+      Assertions.assertFalse(vars.get.contains("var2"))
+      Assertions.assertEquals("List((id_col,msg_100), (var1,var_a_100))",
         vars.get.toList.sortBy(_._1).toString)
     })
   }
