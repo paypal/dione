@@ -1,7 +1,7 @@
 # Dione
 Dione - an indexing Library for data on HDFS.
 
-The main offering is tools for building an index for HDFS data and querying the index in both:
+The main offering is tool for building an index for HDFS data and querying the index in following:
 - _Single-row_ - `get(key)` with relatively low latency (a few seconds) depended only on HDFS.
 - _Multi-row_ - (typically up to ~1% of the size of key space) -
   relying on some processing engine (e.g Spark), retrieve values in a few minutes without processing all the data.
@@ -14,11 +14,11 @@ The main offering is tools for building an index for HDFS data and querying the 
 
 ### The problem we solve
 - _Single-row_ fetch - enable fast key-value fetches for data in HDFS.
-- _Multi-row_ fetch - Avoid shuffling and deserializing all the data if users want only a small number of keys.
+- _Multi-row_ fetch - avoid shuffling and deserializing all the data if users want only a small number of keys.
 
 ### Main Benefits
 - Same technology for both batch processing and ad-hoc tasks.
-- Ownership - we do not need to "own" the data and can thus can avoid duplication.
+- Ownership - we do not need to "own" the data and can thus avoid duplication.
 - Support multiple keys for the same data.
 - both data and index are accessible in Hive.
 
@@ -27,7 +27,7 @@ This library contains three main components:
 - **HDFS Indexer** - runs through the "real" data and saves metadata on each row to quickly fetch back the data upon request.
   currently, supports Avro, Sequence and Parquet files.
 
-- **AvroBtreeStorageFile** - A way to store a file on HDFS that given a key can quickly get its value.
+- **AvroBtreeStorageFile** - A way to store a file on HDFS that by a given key can quickly get its value.
   Leverages Avro so can be read in Hive, Spark, etc.
 
 - **SparkIndexer**/**IndexManager** - Spark APIs to leverage Spark for distribution of both index creation and _multi-row_ fetch.
