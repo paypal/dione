@@ -101,20 +101,32 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
       val hdfsIndexer = indexManager.sparkIndexer.initHdfsIndexer(new Path(gr.get(FILE_NAME_COLUMN).toString), fs.getConf, payloadSchema)
       val tData = hdfsIndexer.fetch(HdfsIndexerMetadata(gr))
       val grData = indexManager.sparkIndexer.convertMap(tData)
-      Assertions.assertEquals(Some(sample.varValue), grData.get("var1").map(_.toString))
+      Assertions.assertEquals(Some(sample.varValue), grData.get("var1"))
     })
   }
 
   @Order(6)
   @Test
-  def testFetch(): Unit = {
+  def testFetchAll(): Unit = {
     val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
     testSamples.foreach(sample => {
       val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition))
-      Assertions.assertEquals(sample.varValue, vars.get("var1").toString)
+      Assertions.assertEquals(sample.varValue, vars.get("var1"))
       Assertions.assertEquals("List((id_col,msg_100), (meta_field,meta_100), (var1,var_a_100), (var2,100))",
         vars.get.toList.sortBy(_._1).toString)
     })
   }
 
+  @Order(7)
+  @Test
+  def testFetch(): Unit = {
+    val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
+    testSamples.foreach(sample => {
+      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition), Some(Seq("var1")))
+      Assertions.assertEquals(sample.varValue, vars.get("var1"))
+      Assertions.assertFalse(vars.get.contains("var2"))
+      Assertions.assertEquals("List((id_col,msg_100), (var1,var_a_100))",
+        vars.get.toList.sortBy(_._1).toString)
+    })
+  }
 }

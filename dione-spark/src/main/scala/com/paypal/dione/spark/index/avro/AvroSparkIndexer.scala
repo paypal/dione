@@ -44,6 +44,6 @@ case class AvroSparkIndexer(@transient spark: SparkSession) extends SparkIndexer
   }
 
   def convertMap(gr: GenericRecord): Map[String, Any] =
-    GenericRecordMap(gr)
+    GenericRecordMap(gr, Some(fieldsSchema.fieldNames))
 
 }
