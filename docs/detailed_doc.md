@@ -1,7 +1,7 @@
 # Dione
 Dione - an indexing Library for data on HDFS.
 
-The main offering is tool for building an index for HDFS data and querying the index in following:
+The main offering is a tool for building an index for HDFS data and querying the index in following:
 - _Single-row_ - `get(key)` with relatively low latency (a few seconds) depended only on HDFS.
 - _Multi-row_ - (typically up to ~1% of the size of key space) -
   relying on some processing engine (e.g Spark), retrieve values in a few minutes without processing all the data.
