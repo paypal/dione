@@ -28,7 +28,7 @@ jobs:
 
       - name: Maven build
         run:
-            mvn -B -V clean install
+            mvn -B -V clean package
 
       - name: Upload jar file
         uses: actions/upload-artifact@v2

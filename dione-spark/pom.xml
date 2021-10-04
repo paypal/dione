@@ -3,7 +3,7 @@
     <parent>
         <artifactId>dione-parent</artifactId>
         <groupId>com.paypal.dione</groupId>
-        <version>0.6.0-SNAPSHOT</version>
+        <version>0.6.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -17,12 +17,12 @@
         <dependency>
             <groupId>com.paypal.dione</groupId>
             <artifactId>dione-hadoop</artifactId>
-            <version>0.6.0-SNAPSHOT</version>
+            <version>0.6.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.paypal.dione</groupId>
             <artifactId>dione-hadoop</artifactId>
-            <version>0.6.0-SNAPSHOT</version>
+            <version>0.6.1-SNAPSHOT</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
