@@ -16,9 +16,9 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private val fileReader0 = OrcFile.createReader(file, OrcFile.readerOptions(conf))
-  private val fileReader = fileReader0.rows()
-  private val fileSchema = fileReader0.getSchema
+  private val reader = OrcFile.createReader(file, OrcFile.readerOptions(conf))
+  private val recordReader = reader.rows()
+  private val fileSchema = reader.getSchema
   private val batch = fileSchema.createRowBatch(1000)
   private val projectedFieldsList = if (projectedFields.nonEmpty) {
     val origFieldsMap = fileSchema.getFieldNames.zipWithIndex.toMap
@@ -33,7 +33,8 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
   private var numInBatch = 0
 
   override def closeCurrentFile(): Unit = {
-    fileReader.close()
+    recordReader.close()
+    batch.reset()
   }
 
   /**
@@ -42,13 +43,13 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
   override def seek(offset: Long): Unit = {
     logger.debug("seeking to offset: {}", offset)
     if (batch.size > 0 &&
-        offset >= fileReader.getRowNumber - batch.size &&
-        offset < fileReader.getRowNumber) {
-     numInBatch =  (offset - fileReader.getRowNumber + batch.size).toInt
+        offset >= recordReader.getRowNumber - batch.size &&
+        offset < recordReader.getRowNumber) {
+     numInBatch =  (offset - recordReader.getRowNumber + batch.size).toInt
      logger.debug("batch already loaded, changing numInBatch to {}", numInBatch)
     } else {
       logger.debug("using seekToRow")
-      fileReader.seekToRow(offset)
+      recordReader.seekToRow(offset)
     }
   }
 
@@ -56,6 +57,7 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
    * Skip the next row - can avoid deserialization, etc.
    */
   override def skip(): Unit = {
+    // ORC has row random access internally. no need for skip.
   }
 
   /**
@@ -67,7 +69,7 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
       return null
 
     if (numInBatch >= batch.size) {
-      fileReader.nextBatch(batch)
+      recordReader.nextBatch(batch)
       numInBatch = 0
     }
 
@@ -80,9 +82,15 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
           val fieldDesc = fileSchema.getChildren.get(icol)
           // based on https://www.javahelps.com/2020/08/read-and-write-orc-files-in-core-java.html
           val v = fieldDesc.getCategory.getName match {
-            case "int" => columnVector.asInstanceOf[LongColumnVector].vector(numInBatch)
+            case "tinyint" => columnVector.asInstanceOf[LongColumnVector].vector(numInBatch).toByte
+            case "smallint" => columnVector.asInstanceOf[LongColumnVector].vector(numInBatch).toShort
+            case "int" | "date" => columnVector.asInstanceOf[LongColumnVector].vector(numInBatch).toInt
+            case "bigint" => columnVector.asInstanceOf[LongColumnVector].vector(numInBatch)
+            case "boolean" => columnVector.asInstanceOf[LongColumnVector].vector(numInBatch) == 1L
             case "float" => columnVector.asInstanceOf[DoubleColumnVector].vector(numInBatch).toFloat
-            case "string" => columnVector.asInstanceOf[BytesColumnVector].toString(numInBatch)
+            case "double" => columnVector.asInstanceOf[DoubleColumnVector].vector(numInBatch)
+            case "string" | "varchar" => columnVector.asInstanceOf[BytesColumnVector].toString(numInBatch)
+            case "char" => columnVector.asInstanceOf[BytesColumnVector].toString(numInBatch).charAt(0)
             case s: String => throw new RuntimeException("Unsupported type " + s)
           }
           projectedFieldsList.get(icol)._1 -> v
@@ -96,6 +104,6 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
   }
 
   override def getCurMetadata(): HdfsIndexerMetadata = {
-    HdfsIndexerMetadata(file.toString, fileReader.getRowNumber-batch.size+numInBatch-1, 0)
+    HdfsIndexerMetadata(file.toString, recordReader.getRowNumber-batch.size+numInBatch-1, 0)
   }
 }
