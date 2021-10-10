@@ -65,7 +65,8 @@ class TestOrcIndexer {
 
     println(orcIndexList)
     Assertions.assertEquals(13, orcIndexList.size)
-    Assertions.assertEquals((13,0), (orcIndexList.head._2.position, orcIndexList.head._2.numInBlock))
+    Assertions.assertEquals((0,0), (orcIndexList.head._2.position, orcIndexList.head._2.numInBlock))
+    Assertions.assertEquals((8,0), (orcIndexList(8)._2.position, orcIndexList(8)._2.numInBlock))
   }
 
   @Order(2)
