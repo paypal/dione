@@ -40,7 +40,16 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
    * Regular seek. Called once per offset (block).
    */
   override def seek(offset: Long): Unit = {
-    fileReader.seekToRow(offset)
+    logger.debug("seeking to offset: {}", offset)
+    if (batch.size > 0 &&
+        offset >= fileReader.getRowNumber - batch.size &&
+        offset < fileReader.getRowNumber) {
+     numInBatch =  (offset - fileReader.getRowNumber + batch.size).toInt
+     logger.debug("batch already loaded, changing numInBatch to {}", numInBatch)
+    } else {
+      logger.debug("using seekToRow")
+      fileReader.seekToRow(offset)
+    }
   }
 
   /**
