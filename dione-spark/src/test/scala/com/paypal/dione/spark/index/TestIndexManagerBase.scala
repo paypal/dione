@@ -77,7 +77,7 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
     Assertions.assertEquals(queryDF.count, queryDF.join(payloadDF, indexSpec.keys).count)
 
     testSamples.foreach(sample => {
-      Assertions.assertEquals(List(Row((Seq(sample.key) ++ sample.moreFields ++ Seq(sample.varValue)):_*)).toString,
+      Assertions.assertEquals(List(Row(Seq(sample.key) ++ sample.moreFields ++ Seq(sample.varValue):_*)).toString,
         payloadDF.where(s"id_col in $sampleKeys")
           .select((indexSpec.keys ++ indexSpec.moreFields ++ Seq("var1")).map(col):_*)
           .collect().toList.toString)
