@@ -51,7 +51,11 @@ object IndexManagerUtils {
 
     // TODO: change to udf+explode
     val serConf = SerializableConfiguration.broadcast(spark)
-    val chunkSize = spark.conf.get("indexer.files.chunkMB", "50").toLong << 20
+    val isSplitChunks = spark.conf.get("indexer.files.chunk.split", "true").toBoolean
+    val chunkSize = if (isSplitChunks)
+      spark.conf.get("indexer.files.chunkMB", "50").toLong << 20
+    else Long.MaxValue
+
     val filesDF = partitionLocationsDF
       .repartition(col("path"))
       .flatMap((row: Row) => {

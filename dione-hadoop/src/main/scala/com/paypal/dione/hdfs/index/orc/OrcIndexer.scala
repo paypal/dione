@@ -14,6 +14,9 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
   def this(file: Path, conf: Configuration) =
     this(file, 0, 0, conf, None)
 
+  if (start!=0)
+    throw new RuntimeException("currently splits are not supported for ORC files")
+
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val reader = OrcFile.createReader(file, OrcFile.readerOptions(conf))
@@ -64,10 +67,6 @@ case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, p
    * Read the next row
    */
   override def readLine(): Seq[(String, Any)] = {
-    // currently we don't support file split
-    if (start!=0)
-      return null
-
     if (numInBatch >= batch.size) {
       recordReader.nextBatch(batch)
       numInBatch = 0

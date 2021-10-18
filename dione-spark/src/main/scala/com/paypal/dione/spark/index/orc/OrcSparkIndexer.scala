@@ -25,6 +25,10 @@ case class OrcSparkIndexer(@transient spark: SparkSession) extends SparkIndexer 
 
   def initHdfsIndexer(file: Path, conf: Configuration, start: Long, end: Long,
                       fieldsSchema: StructType): HdfsIndexer[Seq[(String, Any)]] = {
+    if (start!=0)
+      throw new RuntimeException("currently splits are not supported for ORC files," +
+        "please set `indexer.files.chunk.split=false`")
+
     this.fieldsSchema = fieldsSchema
     this.fieldsSet = fieldsSchema.fieldNames.toSet
     OrcIndexer(file, start, end, conf, Some(fieldsSchema.fieldNames))
