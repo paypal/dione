@@ -1,10 +1,10 @@
 package com.paypal.dione.spark.index
 
 import java.util.UUID
-
 import com.paypal.dione.hdfs.index.HdfsIndexContants._
 import com.paypal.dione.spark.index.IndexManager.PARTITION_DEF_COLUMN
 import com.paypal.dione.spark.index.avro.AvroSparkIndexer
+import com.paypal.dione.spark.index.csv.CsvSparkIndexer
 import com.paypal.dione.spark.index.parquet.ParquetSparkIndexer
 import com.paypal.dione.spark.index.sequence.SeqFileSparkIndexer
 import org.apache.hadoop.conf.Configuration
@@ -240,7 +240,7 @@ object IndexManagerUtils {
       (format, serde)
     }
 
-    val sparkIndexer = Seq(SeqFileSparkIndexer, AvroSparkIndexer, ParquetSparkIndexer)
+    val sparkIndexer = Seq(SeqFileSparkIndexer, AvroSparkIndexer, ParquetSparkIndexer, CsvSparkIndexer)
       .find(_.canResolve(inputFormat, serde))
       .getOrElse(throw new RuntimeException("could not find indexer for data type: " + storage))
       .createSparkIndexer(spark, indexSpec)
