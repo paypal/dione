@@ -32,8 +32,8 @@ case class CsvSparkIndexer(@transient spark: SparkSession, dataTableName: String
       val fieldsMap = schemaWithoutPartitionCols.map(_.name).zipWithIndex.toMap
       requestedFieldsSchema = fieldsSchema.map(f => fieldsMap(f.name) -> f)
     }
-
-    CsvIndexer(file, start, end, conf, ",")
+    val delimiter = sparkCatalogTable.storage.properties("field.delim").charAt(0)
+    CsvIndexer(file, start, end, conf, delimiter)
   }
 
   def convert(t: Seq[String]): Seq[Any] = {

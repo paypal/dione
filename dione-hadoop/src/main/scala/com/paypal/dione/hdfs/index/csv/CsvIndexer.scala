@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
  */
 
 case class CsvIndexer(file: Path, start: Long, end: Long, conf: Configuration,
-                      delimiter: String)
+                      delimiter: Char)
   extends HdfsIndexer[Seq[String]]() {
 
   if (start!=0)

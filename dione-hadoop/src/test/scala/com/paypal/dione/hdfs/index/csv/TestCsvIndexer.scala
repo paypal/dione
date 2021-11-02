@@ -20,7 +20,7 @@ class TestCsvIndexer {
   @Test
   @Order(1)
   def testSimpleCreateIndex(): Unit = {
-    entries = CsvIndexer(bizlogFile, 0, 1<<30, fileSystem.getConf, ",").iteratorWithMetadata.toList
+    entries = CsvIndexer(bizlogFile, 0, 1<<30, fileSystem.getConf, ',').iteratorWithMetadata.toList
 
     Assertions.assertEquals(4, entries.size)
 
@@ -36,7 +36,7 @@ class TestCsvIndexer {
   @Test
   def testSimpleFetch(): Unit = {
 
-    val csvIndexer = CsvIndexer(bizlogFile, 0, 1 << 30, fileSystem.getConf, ",")
+    val csvIndexer = CsvIndexer(bizlogFile, 0, 1 << 30, fileSystem.getConf, ',')
 
     {
       val sq = csvIndexer.fetch(HdfsIndexerMetadata(bizlogFile.toString, 0, 0))
