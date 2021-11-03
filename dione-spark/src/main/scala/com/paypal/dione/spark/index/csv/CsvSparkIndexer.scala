@@ -25,7 +25,6 @@ case class CsvSparkIndexer(@transient spark: SparkSession, dataTableName: String
 
   private val sparkCatalogTable = IndexManagerUtils.getSparkCatalogTable(spark, dataTableName)
   private val schemaWithoutPartitionCols = spark.table(dataTableName).drop(sparkCatalogTable.partitionColumnNames: _*).schema
-  private val outputFields: Seq[String] = schemaWithoutPartitionCols.map(_.name)
   private var requestedFieldsSchema: Seq[(Int, StructField)] = _
 
   def initHdfsIndexer(file: Path, conf: Configuration, start: Long, end: Long, fieldsSchema: StructType): HdfsIndexer[Seq[String]] = {
@@ -43,16 +42,20 @@ case class CsvSparkIndexer(@transient spark: SparkSession, dataTableName: String
 
   def convert(t: Seq[String]): Seq[Any] = {
     val l = t.toList
-    requestedFieldsSchema.map(rf => {
-      rf._2.dataType match {
-        case _: StringType => l(rf._1)
-        case _: LongType => l(rf._1).toLong
-        case _: IntegerType => l(rf._1).toInt
-        case other => throw new RuntimeException("type " + other + " is currently not support for CsvSparkIndexer")
-      }
-    })
+    requestedFieldsSchema.map(rf => convertAny(rf._2.dataType, l(rf._1)))
   }
 
-  def convertMap(t: Seq[String]): Map[String, Any] = outputFields.zip(t).toMap
+  def convertMap(t: Seq[String]): Map[String, Any] = {
+    val l = t.toList
+    requestedFieldsSchema.map(rf => rf._2.name -> convertAny(rf._2.dataType, l(rf._1))).toMap
+  }
+
+  private def convertAny(dataType: DataType, strVal: String): Any =
+    dataType match {
+      case _: StringType => strVal
+      case _: LongType => strVal.toLong
+      case _: IntegerType => strVal.toInt
+      case other => throw new RuntimeException("type " + other + " is currently not support for CsvSparkIndexer")
+    }
 
 }
