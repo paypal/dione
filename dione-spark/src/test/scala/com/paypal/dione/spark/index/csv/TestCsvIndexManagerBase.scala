@@ -13,7 +13,7 @@ class TestCsvIndexManagerBase extends TestIndexManagerBase {
   def initDataTable(fieldsSchema: String, partitionFieldSchema: String): Unit = {
     spark.sql(s"create table ${indexSpec.dataTableName} ($fieldsSchema) partitioned by ($partitionFieldSchema)" +
       s" row format delimited" +
-      s" fields terminated by '|'")
+      s" fields terminated by '16'")
   }
 
   val testSamples = Seq(SampleTest("msg_100", Nil, "var_a_100", 607, 0, -1))

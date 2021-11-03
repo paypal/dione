@@ -16,11 +16,6 @@ case class CsvIndexer(file: Path, start: Long, end: Long, conf: Configuration,
                       delimiter: Char)
   extends HdfsIndexer[Seq[String]]() {
 
-  if (start!=0)
-    throw new RuntimeException("currently splits are not supported for ORC files")
-
-  private val logger = LoggerFactory.getLogger(this.getClass)
-
   var reader: LineRecordReader = _
   private var curPosition = -1L
   private var lastPosition = -1L
@@ -67,7 +62,8 @@ case class CsvIndexer(file: Path, start: Long, end: Long, conf: Configuration,
   override def getCurMetadata(): HdfsIndexerMetadata = {
     // some quirk of the first line read
     val plusOne = if (lastPosition == curPosition) 1 else 0
-    HdfsIndexerMetadata(file.toString, curPosition, plusOne)
+    val pos = if (curPosition==0) start else curPosition
+    HdfsIndexerMetadata(file.toString, pos, plusOne)
   }
 
   val attemptId = new TaskAttemptID(new TaskID(new JobID(), TaskType.MAP, 0), 0)

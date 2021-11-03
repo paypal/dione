@@ -5,6 +5,7 @@ import com.paypal.dione.hdfs.index.csv.CsvIndexer
 import com.paypal.dione.spark.index._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
+import org.apache.hadoop.hive.serde2.`lazy`.{LazySerDeParameters, LazyUtils}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
 
@@ -32,8 +33,12 @@ case class CsvSparkIndexer(@transient spark: SparkSession, dataTableName: String
       val fieldsMap = schemaWithoutPartitionCols.map(_.name).zipWithIndex.toMap
       requestedFieldsSchema = fieldsSchema.map(f => fieldsMap(f.name) -> f)
     }
-    val delimiter = sparkCatalogTable.storage.properties("field.delim").charAt(0)
-    CsvIndexer(file, start, end, conf, delimiter)
+
+    // logic from org.apache.hadoop.hive.serde2.lazy.LazySerDeParameters.collectSeparators()
+    val tableProperties = sparkCatalogTable.storage.properties
+    val delimiter = LazyUtils.getByte(tableProperties.getOrElse("field.delim",
+      tableProperties.getOrElse("serialization.format", null)), LazySerDeParameters.DefaultSeparators(0))
+    CsvIndexer(file, start, end, conf, delimiter.toChar)
   }
 
   def convert(t: Seq[String]): Seq[Any] = {
