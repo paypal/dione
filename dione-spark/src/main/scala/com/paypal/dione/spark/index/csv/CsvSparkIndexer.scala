@@ -55,6 +55,10 @@ case class CsvSparkIndexer(@transient spark: SparkSession, dataTableName: String
       case _: StringType => strVal
       case _: LongType => strVal.toLong
       case _: IntegerType => strVal.toInt
+      case _: BooleanType => strVal.toBoolean
+      case _: FloatType => strVal.toFloat
+      case _: DoubleType => strVal.toDouble
+      case _: CharType => strVal.charAt(0)
       case other => throw new RuntimeException("type " + other + " is currently not support for CsvSparkIndexer")
     }
 
