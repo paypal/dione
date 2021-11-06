@@ -199,7 +199,7 @@ object IndexReader {
     val partitions = math.max(shufflePartitions / repartitionRatio, 1)
 
     val reducedPartitionsDF =
-      keysDF.repartition(partitions, hash(col(FILE_NAME_COLUMN))).sortWithinPartitions(FILE_NAME_COLUMN, OFFSET_COLUMN)
+      keysDF.repartition(partitions, hash(col(FILE_NAME_COLUMN))).sortWithinPartitions(FILE_NAME_COLUMN, OFFSET_COLUMN, SUB_OFFSET_COLUMN)
 
     // now inside every partition we split the rows to chunks of X bytes.
     // the size of each row is predicted by `data_size` column which was
