@@ -60,16 +60,16 @@ case class CsvIndexer(file: Path, start: Long, end: Long, conf: Configuration,
   }
 
   override def getCurMetadata(): HdfsIndexerMetadata = {
+    val pos = if (curPosition==0) start else curPosition
     // some quirk of the first line read
     val plusOne = if (lastPosition == curPosition) 1 else 0
-    val pos = if (curPosition==0) start else curPosition
     HdfsIndexerMetadata(file.toString, pos, plusOne)
   }
 
   val attemptId = new TaskAttemptID(new TaskID(new JobID(), TaskType.MAP, 0), 0)
   val hadoopAttemptContext = new TaskAttemptContextImpl(conf, attemptId)
 
-  private def initReader(start: Long, end: Long) = {
+  private def initReader(start: Long, end: Long): Unit = {
     reader = new LineRecordReader()
     reader.initialize(new FileSplit(file, start, end - start, Array.empty), hadoopAttemptContext)
   }
