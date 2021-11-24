@@ -33,6 +33,9 @@ object TestOneLineInBlock extends SparkCleanTestDB {
       s"partitioned by (dt string) stored as avro")
     spark.sql(s"insert overwrite table t3 partition (dt='2018-10-04') select * from t")
 
+    // ensure one row per block
+    assert(spark.table("t3").filter($"data_sub_offset" > 0).count == 0)
+    
     spark.table("t3").show()
   }
 
