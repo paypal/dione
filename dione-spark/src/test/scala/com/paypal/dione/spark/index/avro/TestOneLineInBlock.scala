@@ -33,6 +33,7 @@ object TestOneLineInBlock extends SparkCleanTestDB {
       s"partitioned by (dt string) stored as avro")
     spark.sql(s"insert overwrite table t3 partition (dt='2018-10-04') select * from t")
 
+
     spark.table("t3").show()
   }
 
@@ -48,6 +49,10 @@ class TestOneLineInBlock {
   def testCreateIndexManager(): Unit = {
     IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created")))(spark)
     spark.sql("desc formatted index_t3").show(100, false)
+    // ensure one row per block
+    import spark.implicits._
+    assert(spark.table("index_t3").filter($"data_sub_offset" > 0).count == 0)
+
   }
 
   @Test
