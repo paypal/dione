@@ -25,7 +25,7 @@ object SparkAvroBtreeUtils {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
   val KEY_HASH_COLUMN = "keyhash"
-  private val PARTITION_HASH_COLUMN = "prthash"
+  val PARTITION_HASH_COLUMN = "prthash"
 
   /**
    * Save a Spark DataFrame as AvroBtreeFiles, so later we'll be able to leverage that for a few use-cases.
@@ -47,7 +47,9 @@ object SparkAvroBtreeUtils {
                          numFilesInFolder: Int, interval: Int, height: Int,
                          mode: String = "overwrite"
                         )(implicit spark: SparkSession): Unit = {
-    writePartitionedDFasAvroBtree(df, keys, folderName, interval, height, Seq((Nil, numFilesInFolder)), mode)
+    val partitionsSpec = Seq((Nil, numFilesInFolder))
+    val repartitionedDF = IndexManagerUtils.customRepartition(df, keys, partitionsSpec)
+    writePartitionedDFasAvroBtree(repartitionedDF, keys, folderName, interval, height, partitionsSpec, mode)
   }
 
   /**
@@ -66,14 +68,16 @@ object SparkAvroBtreeUtils {
 
     val keysSet = keys.toSet
     val partitionKeys = partitionsSpec.flatMap(_._1.map(_._1)).distinct
-    val remainingColumns = df.columns.filterNot(c => keysSet.contains(c) || partitionKeys.contains(c))
+
+    def isReservedColumn(c: String) =
+      keysSet.contains(c) || partitionKeys.contains(c) || c == PARTITION_HASH_COLUMN || c == KEY_HASH_COLUMN
+
+    val remainingColumns = df.columns.filterNot(isReservedColumn)
 
     logger.info("writing index file to " + folderName + s" with interval: $interval, height: $height," +
       s" partitionsSpec: $partitionsSpec")
 
-    val repartitionedDF = customRepartition(df, keys, partitionsSpec)
-
-    repartitionedDF
+    df
       .write
       .partitionBy(partitionKeys:_*)
       .mode(mode)
@@ -127,7 +131,7 @@ object SparkAvroBtreeUtils {
     val outputSchema = StructType(dsDF.schema ++ indexTableValueSchema)
 
     // repartition the dsDF using our customRepartition to get the matching partitions
-    val repartitionedDF = SparkAvroBtreeUtils.customRepartition(filteredDsDf, keys, partitionsSpecWithNumFiles)
+    val repartitionedDF = IndexManagerUtils.customRepartition(filteredDsDf, keys, partitionsSpecWithNumFiles)
 
     // on-the-fly join between the matching partitions. both sides are sorted, so we just "merge-join" them
     val joinedDF = repartitionedDF.mapPartitions((it: Iterator[Row]) =>
@@ -174,60 +178,4 @@ object SparkAvroBtreeUtils {
     joinedDF
   }
 
-  /**
-   * This is a custom partitioner. shuffles the data according to the keys and partition keys.
-   * Each partitionSpec contains the number of files its rows will be shuffled to, and each file will contain
-   * only keys with the same hash value. Also, files will be sorted by the keys.
-   *
-   * @param partitionsSpec static partitions definition. each entry contain the (key->value) list of a specific
-   *                       partition and number of files the partition's folder.
-   * @return repartitioned DataFrame where each partition contains only rows of the same hashkey and partition.
-   */
-  def customRepartition(df: DataFrame, keys: Seq[String],
-                        partitionsSpec: Seq[(Seq[(String, String)], Int)]): DataFrame = {
-
-    val dupPartitionValues = partitionsSpec.map(_._1).groupBy(identity).map(t => (t._1, t._2.size)).filter(_._2 > 1).keys
-    assert(dupPartitionValues.isEmpty, "Found duplicated partitions: " + dupPartitionValues)
-
-    val partitionKeys = partitionsSpec.flatMap(_._1.map(_._1)).distinct
-
-    val spark = df.sparkSession
-
-    val hashudf = spark.udf.register("hashudf",
-      AvroHashBtreeStorageFolderReader.hashModuloUdf(_: mutable.WrappedArray[String], _: Int))
-
-    // static map from partition values to (num_of_files, cumsum_num_of_files)
-    var s = 0
-    val prtsIndex: Map[Seq[String], (Int, Int)] = partitionsSpec.map(sq => {
-      val sqMap = sq._1.toMap
-      (partitionKeys.map(sqMap), sq._2)
-    }).zipWithIndex.map(t => {s+=t._1._2; (t._1._1, (t._1._2, s-t._1._2))}).toMap
-
-    val prtudf = spark.udf.register("prtudf", (prtSpec: mutable.WrappedArray[String]) =>
-      prtsIndex.getOrElse(prtSpec, (0,0)))
-
-    // for each "static" partition, we would like to have numFilesInPartition files.
-    // and because each task creates one file, we want (numFilesInPartition * numOfPartitions) tasks.
-    // moreover, we want to decide which rows are in each task, so in the reader we would know in which
-    // file to find every key.
-    val dfWithHashes = df
-      .withColumn(PARTITION_HASH_COLUMN, prtudf(array(partitionKeys.map(col): _*)))
-      .withColumn(KEY_HASH_COLUMN, hashudf(array(keys.map(col): _*), expr("prthash._1")))
-
-    val customPartitionedRDD = dfWithHashes
-      .rdd
-      .map(row => ((row.getAs[Int](KEY_HASH_COLUMN), row.getAs[Row](PARTITION_HASH_COLUMN).get(1)), row))
-      .partitionBy(new Partitioner {
-        override def numPartitions: Int = prtsIndex.values.map(_._1).sum
-
-        override def getPartition(key: Any): Int = {
-          val (hashKeyMod, prtCumSum) = key.asInstanceOf[(Int, Int)]
-          prtCumSum + hashKeyMod
-        }
-
-      })
-
-    spark.createDataFrame(customPartitionedRDD.map(_._2), dfWithHashes.schema)
-      .sortWithinPartitions((partitionKeys ++ keys).map(col):_*)
-  }
 }
