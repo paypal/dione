@@ -94,8 +94,7 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
       .withColumn("num", expr("explode(array(1,2,3))"))
     val payloadDF = indexManager.loadByIndex(queryDF, Some(Seq("var1")))
 
-    payloadDF.show()
-
+    Assertions.assertEquals(testSamples.size * 3, payloadDF.select("id_col").count)
     Assertions.assertEquals(testSamples.size, payloadDF.select("id_col").distinct().count)
   }
 
