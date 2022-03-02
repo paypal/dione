@@ -116,7 +116,7 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
 
   def btreeProps(n: Int, interval: Int, height: Int): Unit = {
     val kvStorageFileWriter = simpleStorage.writer(interval, height)
-    val entries = (1 to 100).map(_.toString.reverse.padTo(3, '0').reverse)
+    val entries = (1 to n).map(_.toString.reverse.padTo(3, '0').reverse)
     kvStorageFileWriter.write(entries.iterator.map(i => (simpleSchema.createRecord(i), simpleSchema2.createRecord(i))), filename)
 
     val kvStorageFileReader = simpleStorage.reader(filename)
@@ -136,5 +136,25 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
   @Test
   def testIterator10_3(): Unit = btreeProps(100,10, 3)
 
+  @Test
+  def testIterator(): Unit = {
+    val kvStorageFileWriter = simpleStorage.writer(2, 3)
+
+    val entries = Seq("a1" -> "1", "b1" -> "2", "a1" -> "3").iterator
+      .map(i => (simpleSchema.createRecord(i._1), simpleSchema2.createRecord(i._2)))
+    kvStorageFileWriter.write(entries, filename)
+
+    val kvStorageFileReader = simpleStorage.reader(filename)
+
+    Assertions.assertEquals(List("1", "3"),
+      kvStorageFileReader.getIterator(simpleSchema.createRecord("a1")).map(_.get("val2").toString).toList)
+
+    Assertions.assertEquals(List("2"),
+      kvStorageFileReader.getIterator(simpleSchema.createRecord("b1")).map(_.get("val2").toString).toList)
+
+    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("a0")).hasNext)
+    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("a2")).hasNext)
+    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("c1")).hasNext)
+  }
 }
 

@@ -42,7 +42,7 @@ public class AvroBtreeFile {
     // Schema of Long that can be null
     public static Schema metadataSchema = SchemaBuilder.unionOf().nullType().and().longType().endUnion();
 
-    public static class Reader implements Closeable, Iterable<GenericRecord> {
+    public static class Reader implements Closeable {
         private final Long dataSize;
         private final long fileHeaderEnd;
 
@@ -113,65 +113,91 @@ public class AvroBtreeFile {
          * idea is that randomly seeking to a specific position is much more expensive than reading many records
          * sequentially.
          */
-        public GenericRecord get(GenericRecord key) throws IOException {
+        public Iterator<GenericRecord> get(GenericRecord key) {
             logger.debug("searching for key: {}", key);
-            return getHelper(0, key);
-        }
+            return new Iterator<GenericRecord>() {
 
-        private GenericRecord getHelper(long startOffset, GenericRecord key) throws IOException {
-            startOffset += fileHeaderEnd;
-            logger.debug("seeking to position: " + startOffset);
-            mFileReader.seek(startOffset);
-            int counter = 0;
+                long curOffset = 0;
+                GenericRecord nxt = getHelper();
 
-            GenericRecord lastRecord = null;
-
-            Iterator<GenericRecord> iter = mFileReader;
-            mFileReader.hasNext();
-            long blockCount = -1;
-            RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
-            while (iter.hasNext() && (counter < blockCount || blockCount < 0)) {
-                GenericRecord record = iter.next();
-                if (blockCount < 0) blockCount = mFileReader.getBlockCount();
-
-                counter += 1;
-                int comparison = GenericData.get().compare(projection.getKey(record), key, mKeySchema);
-                logger.debug("comparison was: {} with: {} and {}", comparison, projection.getKey(record), key);
-                if (0 == comparison) {
-                    // We've found it!
-                    logger.debug("Found record for key {}", key);
-                    return projection.getValue(record);
-                } else if (comparison > 0) {
-                    // We've passed it.
-                    if (lastRecord == null || projection.getMetadata(lastRecord) == null) {
-                        logger.debug("key does not appear in the file: {}", key);
-                        return null;
-                    } else {
-                        Long offset = getRealOffset(lastRecord);
-                        return getHelper(offset, key);
-                    }
+                @Override
+                public boolean hasNext() {
+                    return nxt!=null;
                 }
-                lastRecord = record;
-            }
-            if (lastRecord != null && projection.getMetadata(lastRecord) != null)
-                return getHelper(getRealOffset(lastRecord), key);
 
-            logger.debug("reached end of road. key does not appear in the file: {}", key);
-            return null;
+                @Override
+                public GenericRecord next() {
+                    GenericRecord ret = nxt;
+                    nxt = getHelper();
+                    return ret;
+                }
+
+                public GenericRecord getHelper() {
+                    curOffset += fileHeaderEnd;
+                    logger.debug("seeking to position: " + curOffset);
+                    try {
+                        mFileReader.seek(curOffset);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    int counter = 0;
+
+                    GenericRecord lastRecord = null;
+
+                    Iterator<GenericRecord> iter = mFileReader;
+                    mFileReader.hasNext();
+                    long blockCount = -1;
+                    RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
+                    while (iter.hasNext() && (counter < blockCount || blockCount < 0)) {
+                        GenericRecord record = iter.next();
+                        if (blockCount < 0) blockCount = mFileReader.getBlockCount();
+
+                        counter += 1;
+                        int comparison = GenericData.get().compare(projection.getKey(record), key, mKeySchema);
+                        logger.debug("comparison was: {} with: {} and {}", comparison, projection.getKey(record), key);
+                        if (0 == comparison) {
+                            // We've found it!
+                            logger.debug("Found record for key {}", key);
+                            curOffset = getRealOffset(record);
+                            return projection.getValue(record);
+                        } else if (comparison > 0) {
+                            // We've passed it.
+                            if (lastRecord == null || projection.getMetadata(lastRecord) == null) {
+                                logger.debug("key does not appear in the file: {}", key);
+                                curOffset -= fileHeaderEnd;
+                                return null;
+                            } else {
+                                curOffset = getRealOffset(lastRecord);
+                                return getHelper();
+                            }
+                        }
+                        lastRecord = record;
+                    }
+                    if (lastRecord != null && projection.getMetadata(lastRecord) != null) {
+                        curOffset = getRealOffset(lastRecord);
+                        return getHelper();
+                    }
+
+                    logger.debug("reached end of road. key does not appear in the file: {}", key);
+                    return null;
+                }
+
+            };
         }
 
         private Long getRealOffset(GenericRecord record) {
+            Long offset = dataSize;
             Long reversedOffset = (Long) record.get(METADATA_COL_NAME);
-            Long offset = dataSize - reversedOffset;
+            if (reversedOffset != null)
+                offset -= reversedOffset;
             return offset;
         }
-
 
         /**
          * this iterator runs on the records in sorted order, and not in the "b-tree" order the records are
          * saved in the file
          */
-        public Iterator<GenericRecord> iterator() {
+        public Iterator<GenericRecord> getIterator() {
             return new Iterator<GenericRecord>() {
 
                 private final RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
