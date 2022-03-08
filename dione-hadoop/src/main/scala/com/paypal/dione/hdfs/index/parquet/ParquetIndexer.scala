@@ -15,6 +15,9 @@ case class ParquetIndexer(file: Path, start: Long, end: Long, conf: Configuratio
   def this(file: Path, conf: Configuration) =
     this(file, 0, 0, conf, None)
 
+  if (start!=0)
+    throw new RuntimeException("currently splits are not supported for Parquet files")
+
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   private val fileName = file.toString
@@ -55,9 +58,6 @@ case class ParquetIndexer(file: Path, start: Long, end: Long, conf: Configuratio
    * Read the next row
    */
   override def readLine(): GenericRecord = {
-    // currently we don't support file split for parquet
-    if (start!=0)
-      return null
 
     val hasNext = fileReader.nextKeyValue()
     if (hasNext)
