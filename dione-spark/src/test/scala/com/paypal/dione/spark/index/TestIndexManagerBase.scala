@@ -6,7 +6,7 @@ import com.paypal.dione.hdfs.index.HdfsIndexerMetadata
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api._
@@ -77,11 +77,25 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
     Assertions.assertEquals(queryDF.count, queryDF.join(payloadDF, indexSpec.keys).count)
 
     testSamples.foreach(sample => {
-      Assertions.assertEquals(List(Row((Seq(sample.key) ++ sample.moreFields ++ Seq(sample.varValue)):_*)).toString,
+      Assertions.assertEquals(List(Row(Seq(sample.key) ++ sample.moreFields ++ Seq(sample.varValue):_*)).toString,
         payloadDF.where(s"id_col in $sampleKeys")
           .select((indexSpec.keys ++ indexSpec.moreFields ++ Seq("var1")).map(col):_*)
           .collect().toList.toString)
     })
+  }
+
+  @Test
+  @Order(4)
+  def testLoadByIndexDuplicateRequests(): Unit = {
+    val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
+    val sampleDF = spark.createDataFrame(testSamples.map(x=>(x.key, x.size))).toDF("id_col", "some_size")
+    // duplicate the row a few times
+    val queryDF = indexManager.getIndex().join(sampleDF, "id_col")
+      .withColumn("num", expr("explode(array(1,2,3))"))
+    val payloadDF = indexManager.loadByIndex(queryDF, Some(Seq("var1")))
+
+    Assertions.assertEquals(testSamples.size * 3, payloadDF.select("id_col").count)
+    Assertions.assertEquals(testSamples.size, payloadDF.select("id_col").distinct().count)
   }
 
   @Order(5)
