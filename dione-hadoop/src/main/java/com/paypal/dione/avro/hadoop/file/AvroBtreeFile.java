@@ -117,8 +117,13 @@ public class AvroBtreeFile {
             logger.debug("searching for key: {}", key);
             return new Iterator<GenericRecord>() {
 
-                long curOffset = 0;
-                GenericRecord nxt = getHelper();
+                long curOffset;
+                GenericRecord lastRecord = null;
+                int counter;
+                long blockCount;
+                private RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
+
+                GenericRecord nxt = getNextFromOffset(0);
 
                 @Override
                 public boolean hasNext() {
@@ -128,28 +133,33 @@ public class AvroBtreeFile {
                 @Override
                 public GenericRecord next() {
                     GenericRecord ret = nxt;
-                    nxt = getHelper();
+                    nxt = getNext();
                     return ret;
                 }
 
-                public GenericRecord getHelper() {
+                private GenericRecord getNextFromOffset(long offset) {
+                    curOffset = offset;
+                    init();
+                    return getNext();
+                }
+
+                private void init() {
                     curOffset += fileHeaderEnd;
                     logger.debug("seeking to position: " + curOffset);
+                    counter = 0;
+                    blockCount = -1;
+                    lastRecord = null;
                     try {
                         mFileReader.seek(curOffset);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    int counter = 0;
-
-                    GenericRecord lastRecord = null;
-
-                    Iterator<GenericRecord> iter = mFileReader;
                     mFileReader.hasNext();
-                    long blockCount = -1;
-                    RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
-                    while (iter.hasNext() && (counter < blockCount || blockCount < 0)) {
-                        GenericRecord record = iter.next();
+                }
+
+                private GenericRecord getNext() {
+                    while (mFileReader.hasNext() && (counter < blockCount || blockCount < 0)) {
+                        GenericRecord record = mFileReader.next();
                         if (blockCount < 0) blockCount = mFileReader.getBlockCount();
 
                         counter += 1;
@@ -158,7 +168,7 @@ public class AvroBtreeFile {
                         if (0 == comparison) {
                             // We've found it!
                             logger.debug("Found record for key {}", key);
-                            curOffset = getRealOffset(record);
+                            lastRecord = record;
                             return projection.getValue(record);
                         } else if (comparison > 0) {
                             // We've passed it.
@@ -167,15 +177,13 @@ public class AvroBtreeFile {
                                 curOffset -= fileHeaderEnd;
                                 return null;
                             } else {
-                                curOffset = getRealOffset(lastRecord);
-                                return getHelper();
+                                return getNextFromOffset(getRealOffset(lastRecord));
                             }
                         }
                         lastRecord = record;
                     }
                     if (lastRecord != null && projection.getMetadata(lastRecord) != null) {
-                        curOffset = getRealOffset(lastRecord);
-                        return getHelper();
+                        return getNextFromOffset(getRealOffset(lastRecord));
                     }
 
                     logger.debug("reached end of road. key does not appear in the file: {}", key);

@@ -63,4 +63,12 @@ class TestAvroIndexManagerNonUnique {
     Assertions.assertEquals("v_12", vars.get("val").toString)
   }
 
+  @Order(4)
+  @Test
+  def testFetchAll(): Unit = {
+    val indexManager = IndexManager.load("index_tbl")(spark)
+    val vars = indexManager.fetchAll(Seq("k_11"), Seq("dt" -> "2021-10-04"))
+    Assertions.assertEquals(List("v_11", "v_12"), vars.map(_("val").toString).toList.sorted)
+  }
+
 }
