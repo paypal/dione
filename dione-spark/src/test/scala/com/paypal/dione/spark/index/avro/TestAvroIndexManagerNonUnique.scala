@@ -60,7 +60,8 @@ class TestAvroIndexManagerNonUnique {
   def testFetch(): Unit = {
     val indexManager = IndexManager.load("index_tbl")(spark)
     val vars = indexManager.fetch(Seq("k_11"), Seq("dt" -> "2021-10-04"))
-    Assertions.assertEquals("v_12", vars.get("val").toString)
+    // the order of the values within specific key is not guaranteed
+    Assertions.assertTrue(Seq("v_11", "v_12").contains(vars.get("val").toString))
   }
 
   @Order(4)
