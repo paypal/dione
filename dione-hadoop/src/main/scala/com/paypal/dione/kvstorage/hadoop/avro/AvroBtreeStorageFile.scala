@@ -10,11 +10,13 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.slf4j.LoggerFactory
 
+import scala.collection.JavaConversions._
+
 case class AvroBtreeStorageFileFactory(kschema: Schema, vschema: Schema) {
-  def writer(interval: Int, height: Int) =
+  def writer(interval: Int, height: Int): AvroBtreeStorageFileWriter =
     AvroBtreeStorageFileWriter(kschema, vschema, interval, height)
 
-  def reader(fileName: String) =
+  def reader(fileName: String): AvroBtreeStorageFileReader =
     AvroBtreeStorageFileReader(fileName)
 }
 
@@ -81,9 +83,8 @@ case class AvroBtreeStorageFileReader(override val path: String)
   val fileReader = createReaderFrom(path)
   private val keyGR = new GenericData.Record(fileReader.getKeySchema)
 
-  override def get(key: GenericRecord): Option[GenericRecord] = {
-    val valGR = fileReader.get(key)
-    Option(valGR)
+  override def getIterator(key: GenericRecord): Iterator[GenericRecord] = {
+    fileReader.get(key)
   }
 
   def toGR(key: Seq[Any], grOpt: Option[GenericData.Record] = None): GenericRecord = {
@@ -92,15 +93,15 @@ case class AvroBtreeStorageFileReader(override val path: String)
     gr
   }
 
-  def get(key: Seq[Any]): Option[GenericRecord] = {
-    get(toGR(key, Some(keyGR)))
+  def getIterator(key: Seq[Any]): Iterator[GenericRecord] = {
+    getIterator(toGR(key, Some(keyGR)))
   }
 
   override def getIterator(): Iterator[(GenericRecord, GenericRecord)] = {
     import scala.collection.JavaConversions._
     val projection = new RecordProjection(fileReader.getKeySchema, fileReader.getValueSchema)
 
-    fileReader.iterator().map(t => (projection.getKey(t), projection.getValue(t)))
+    fileReader.getIterator.map(t => (projection.getKey(t), projection.getValue(t)))
   }
 
   private def createReaderFrom(path: String) = {

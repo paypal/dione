@@ -23,7 +23,14 @@ abstract class KVStorageFileWriter[K, V] {
 
 abstract class KVStorageFileReader[K, V](val path: String) {
 
-  def get(key: K): Option[V]
+  def getIterator(key: K): Iterator[V]
+
+  def get(key: K): Option[V] = {
+    val it = getIterator(key)
+    if (it.hasNext)
+      Some(it.next())
+    else None
+  }
 
   def getIterator(): Iterator[(K, V)]
 
