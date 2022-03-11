@@ -132,6 +132,9 @@ public class AvroBtreeFile {
 
                 @Override
                 public GenericRecord next() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
                     GenericRecord ret = nxt;
                     nxt = getNext();
                     return ret;

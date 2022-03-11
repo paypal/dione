@@ -137,7 +137,7 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
   def testIterator10_3(): Unit = btreeProps(100,10, 3)
 
   @Test
-  def testIterator(): Unit = {
+  def testIteratorWithKey(): Unit = {
     val kvStorageFileWriter = simpleStorage.writer(2, 3)
 
     val entries = Seq("a1" -> "1", "b1" -> "2", "a1" -> "3").iterator
@@ -158,7 +158,7 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
   }
 
   @Test
-  def testIterator2(): Unit = {
+  def testIteratorWithKey2(): Unit = {
     val kvStorageFileWriter = simpleStorage.writer(100, 1)
 
     val entries = Seq("a1" -> "1", "b1" -> "2", "b1" -> "3").iterator
