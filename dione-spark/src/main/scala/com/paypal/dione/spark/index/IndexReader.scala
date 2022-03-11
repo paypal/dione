@@ -29,6 +29,7 @@ case class IndexReader(@transient spark: SparkSession, sparkIndexer: SparkIndexe
   @transient private var currentFile: String = _
   @transient private var lastOffset = 0L
   @transient private var lastSubOffset = 0
+  @transient private var lastRow: Seq[Any] = _
 
   val reporter: StatsReporter = IndexReader.getReporter(spark)
 
@@ -96,6 +97,10 @@ case class IndexReader(@transient spark: SparkSession, sparkIndexer: SparkIndexe
     val size = indexRow.getAs[Int](SIZE_COLUMN)
     validateOrder(offset, subOffset, file)
 
+    // short-circuit the case when there is more than one read of the same entry
+    if (lastOffset == offset && lastSubOffset == subOffset)
+      return lastRow
+
     reporter.startRecordRead()
     if (offset != lastOffset) {
       logger.debug("seeking to offset {}", offset)
@@ -113,7 +118,8 @@ case class IndexReader(@transient spark: SparkSession, sparkIndexer: SparkIndexe
     val payload = hdfsIndexer.next()
     lastSubOffset = subOffset
     reporter.endRecordRead(size)
-    sparkIndexer.convert(payload)
+    lastRow = sparkIndexer.convert(payload)
+    lastRow
   }
 
   private def partitionDone(): Unit = {
@@ -199,7 +205,7 @@ object IndexReader {
     val partitions = math.max(shufflePartitions / repartitionRatio, 1)
 
     val reducedPartitionsDF =
-      keysDF.repartition(partitions, hash(col(FILE_NAME_COLUMN))).sortWithinPartitions(FILE_NAME_COLUMN, OFFSET_COLUMN)
+      keysDF.repartition(partitions, hash(col(FILE_NAME_COLUMN))).sortWithinPartitions(FILE_NAME_COLUMN, OFFSET_COLUMN, SUB_OFFSET_COLUMN)
 
     // now inside every partition we split the rows to chunks of X bytes.
     // the size of each row is predicted by `data_size` column which was

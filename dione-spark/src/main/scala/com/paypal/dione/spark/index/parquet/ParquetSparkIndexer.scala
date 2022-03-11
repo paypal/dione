@@ -27,6 +27,9 @@ case class ParquetSparkIndexer(@transient spark: SparkSession) extends SparkInde
   override type T = GenericRecord
 
   def initHdfsIndexer(file: Path, conf: Configuration, start: Long, end: Long, fieldsSchema: StructType): HdfsIndexer[GenericRecord] = {
+    if (start!=0)
+      throw new RuntimeException("currently splits are not supported for Parquet files," +
+        "please set `indexer.files.chunk.split=false`")
     ParquetIndexer(file, start, end, conf, Some(getProjectedAvroSchema(fieldsSchema)))
   }
 

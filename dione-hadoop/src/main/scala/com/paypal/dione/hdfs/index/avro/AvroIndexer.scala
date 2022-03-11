@@ -63,21 +63,15 @@ case class AvroIndexer(file: Path, start: Long, end: Long, conf: Configuration) 
   }
 
   override def getCurMetadata(): HdfsIndexerMetadata = {
-    val size = tryInferSize(fileReader, lastPosition, totalInBlock.intValue())
+    val size = tryInferSize(fileReader, totalInBlock.intValue())
     lastPosition = fileReader.previousSync()
     HdfsIndexerMetadata(file.toString, prevSync, numInBlock, size)
   }
 
   def getSchema(): Schema = fileReader.getSchema
 
-  private def tryInferSize(reader: DataFileReader[GenericRecord], lastPosition: Long, totalInBlock: Int): Int = {
-    val pos = reader.previousSync()
-    val longSize =
-      if (totalInBlock == 1) // exactly 1 row in block
-        pos - lastPosition
-      else { // more than 1 row in block, do rough estimate:
-        reader.getBlockSize /  totalInBlock
-      }
+  private def tryInferSize(reader: DataFileReader[GenericRecord], totalInBlock: Int): Int = {
+    val longSize = reader.getBlockSize /  totalInBlock
     longSize.intValue()
   }
 }
