@@ -166,10 +166,23 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
    * @return The Record as Map
    */
   def fetch(key: Seq[Any], partitionSpec: Seq[(String, String)], fields: Option[Seq[String]] = None): Option[Map[String, Any]] = {
+    val valueIter = fetchAll(key, partitionSpec, fields)
+    if (valueIter.hasNext)
+      Some(valueIter.next())
+    else None
+  }
+
+  /**
+   * Fetch a single data record given a key and specific partition to search in
+   *
+   * @param key  record key
+   * @return The Record as Map
+   */
+  def fetchAll(key: Seq[Any], partitionSpec: Seq[(String, String)], fields: Option[Seq[String]] = None): Iterator[Map[String, Any]] = {
     val partitionFolder = indexFolder + "/" + getPartitionFolder(partitionSpec)
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(partitionFolder)
-    val valueOpt = avroHashBtreeFolderReader.get(key)
-    valueOpt.map(readPayload(_, fields))
+    val valueIter = avroHashBtreeFolderReader.getIterator(key)
+    valueIter.map(readPayload(_, fields))
   }
 
   /**

@@ -52,11 +52,11 @@ case class AvroHashBtreeStorageFolderReader(folderName: String, fileList: List[S
     AvroBtreeStorageFileReader(kvStorageFilename)
   }
 
-  override def get(key: Seq[Any]): Option[GenericRecord] = {
+  override def getIterator(key: Seq[Any]): Iterator[GenericRecord] = {
     val kvStorageFileReader = getFile(key)
     try {
-      kvStorageFileReader.get(key)
-    } finally kvStorageFileReader.close()
+      kvStorageFileReader.getIterator(key)
+    } //finally kvStorageFileReader.close()
   }
 
   override def getIterator(): Iterator[(Seq[Any], GenericRecord)] = ???

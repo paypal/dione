@@ -3,6 +3,7 @@ package com.paypal.dione.spark.index
 import com.paypal.dione.hdfs.index.HdfsIndexContants._
 import com.paypal.dione.spark.index.IndexManager.PARTITION_DEF_COLUMN
 import com.paypal.dione.spark.index.avro.AvroSparkIndexer
+import com.paypal.dione.spark.index.orc.OrcSparkIndexer
 import com.paypal.dione.spark.index.parquet.ParquetSparkIndexer
 import com.paypal.dione.spark.index.sequence.SeqFileSparkIndexer
 import org.apache.hadoop.conf.Configuration
@@ -50,7 +51,11 @@ object IndexManagerUtils {
 
     // TODO: change to udf+explode
     val serConf = SerializableConfiguration.broadcast(spark)
-    val chunkSize = spark.conf.get("indexer.files.chunkMB", "50").toLong << 20
+    val isSplitChunks = spark.conf.get("indexer.files.chunk.split", "true").toBoolean
+    val chunkSize = if (isSplitChunks)
+      spark.conf.get("indexer.files.chunkMB", "50").toLong << 20
+    else Long.MaxValue
+
     val filesDF = partitionLocationsDF
       .repartition(col("path"))
       .flatMap((row: Row) => {
@@ -239,7 +244,7 @@ object IndexManagerUtils {
       (format, serde)
     }
 
-    val sparkIndexer = Seq(SeqFileSparkIndexer, AvroSparkIndexer, ParquetSparkIndexer)
+    val sparkIndexer = Seq(SeqFileSparkIndexer, AvroSparkIndexer, ParquetSparkIndexer, OrcSparkIndexer)
       .find(_.canResolve(inputFormat, serde))
       .getOrElse(throw new RuntimeException("could not find indexer for data type: " + storage))
       .createSparkIndexer(spark, indexSpec)
