@@ -3,9 +3,10 @@ package com.paypal.dione.hdfs.index.orc
 import com.paypal.dione.hdfs.index.{HdfsIndexer, HdfsIndexerMetadata}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.orc.storage.ql.exec.vector.{BytesColumnVector, DoubleColumnVector, LongColumnVector}
+import org.apache.hadoop.hive.ql.exec.vector.{BytesColumnVector, DoubleColumnVector, LongColumnVector}
 import org.apache.orc.OrcFile
 import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConversions._
 
 case class OrcIndexer(file: Path, start: Long, end: Long, conf: Configuration, projectedFields: Option[Seq[String]])

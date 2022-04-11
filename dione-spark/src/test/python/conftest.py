@@ -19,12 +19,12 @@ def spark_session():
     remove_folder('spark-warehouse')
 
     dione_jars = [
-        "dione-hadoop/target/dione-hadoop-0.6.2-SNAPSHOT.jar",
-        "dione-spark/target/dione-spark-0.6.2-SNAPSHOT.jar"
+        "dione-hadoop/target/dione-hadoop-0.7.0-SNAPSHOT.jar",
+        "dione-spark/target/dione-spark-0.7.0-SNAPSHOT.jar"
     ]
 
     spark_jars = [
-        "https://repo1.maven.org/maven2/org/apache/spark/spark-avro_2.11/2.4.8/spark-avro_2.11-2.4.8.jar",
+        "https://repo1.maven.org/maven2/org/apache/spark/spark-avro_2.12/3.1.2/spark-avro_2.12-3.1.2.jar",
         "https://repo1.maven.org/maven2/org/apache/parquet/parquet-avro/1.10.0/parquet-avro-1.10.0.jar",
         "https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.2/avro-1.8.2.jar"
     ]

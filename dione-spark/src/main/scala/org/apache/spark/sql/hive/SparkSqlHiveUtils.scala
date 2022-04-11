@@ -1,21 +1,15 @@
 package org.apache.spark.sql.hive
 
-import java.io.{DataInputStream, DataOutputStream, ObjectInputStream, ObjectOutputStream}
-
 import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hive.ql.metadata.Table
-import org.apache.hadoop.hive.serde2.Deserializer
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector
-import org.apache.hadoop.io.Writable
-import org.apache.spark.sql.catalyst.catalog.{CatalogTable, CatalogTablePartition}
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.expressions.{Attribute, SpecificInternalRow}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.hive.client.HiveClientImpl
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.util.Utils
+
+import java.io.{DataInputStream, DataOutputStream, ObjectInputStream, ObjectOutputStream}
 
 /**
  * Access to protected functions from spark.sql.hive
@@ -25,19 +19,6 @@ object SparkSqlHiveUtils {
 
   def toHiveTable(table: CatalogTable, userName: Option[String] = None) =
     hiveClientImpl.toHiveTable(table, userName)
-
-  def toHivePartition(p: CatalogTablePartition, ht: Table) = hiveClientImpl.toHivePartition(p, ht)
-
-  def fillObject(schema: StructType,
-                 iterator: Iterator[Writable],
-                 rawDeser: Deserializer,
-                 nonPartitionKeyAttrs: Seq[(Attribute, Int)],
-                 tableDeser: Deserializer): Iterator[Row] = {
-    val mutableRow = new SpecificInternalRow(schema.map(_.dataType))
-    val encoder = RowEncoder(schema).resolveAndBind()
-    val internalRows = HadoopTableReader.fillObject(iterator, rawDeser, nonPartitionKeyAttrs, mutableRow, tableDeser)
-    internalRows.map(encoder.fromRow)
-  }
 
   def hiveUnwrapperFor(objectInspector: ObjectInspector) = HadoopTableReader.unwrapperFor(objectInspector)
 

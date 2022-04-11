@@ -32,6 +32,7 @@ Check out our [Quick Start](docs/quick_start.md) or [Quick Start Python](docs/qu
 |-------|------|
 | 0.5.x | 2.3.x|
 | 0.6.x | 2.4.x|
+| 0.7.x | 3.1.x|
 
 ## Reporting an issue
 Please open issues in the [GitHub issues](https://github.com/paypal/dione/issues).

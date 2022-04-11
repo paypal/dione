@@ -70,5 +70,5 @@ jobs:
           find .
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
-          pip install pytest pyspark==2.4.8
+          pip install pytest pyspark==3.1.2
           pytest -v
