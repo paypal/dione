@@ -34,6 +34,7 @@ import org.apache.parquet.io.ParquetDecodingException;
 import org.apache.parquet.io.api.RecordMaterializer;
 import org.apache.parquet.io.api.RecordMaterializer.RecordMaterializationException;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,7 +170,7 @@ class MyInternalParquetRecordReader<T> {
     return (float) current / total;
   }
 
-  public void initialize(ParquetFileReader reader, Configuration configuration)
+  public void initialize(ParquetFileReader reader, Configuration configuration, Set<String> projectedFieldNames)
       throws IOException {
     // initialize a ReadContext for this file
     this.reader = reader;
@@ -188,7 +189,19 @@ class MyInternalParquetRecordReader<T> {
     this.unmaterializableRecordCounter = new UnmaterializableRecordCounter(configuration, total);
     this.filterRecords = configuration.getBoolean(
         RECORD_FILTERING_ENABLED, false);
-    reader.setRequestedSchema(requestedSchema);
+
+    // this is a workaround for an apparent bug in Spark's avro schema generation for complex fields (e.g Map)
+    // we replace the `requestedSchema` with a projection of the fileSchema
+    if (projectedFieldNames!=null) {
+      List projectedFields = new ArrayList<Type>();
+      for (Type field : fileSchema.getFields()) {
+        if (projectedFieldNames.contains(field.getName()))
+          projectedFields.add(field);
+      }
+      this.requestedSchema = new MessageType(fileSchema.getName(), projectedFields);
+      LOG.debug("initialized requested schema {}", this.requestedSchema);
+    }
+    reader.setRequestedSchema(this.requestedSchema);
     LOG.info("RecordReader initialized will read a total of {} records.", total);
   }
 

@@ -7,7 +7,7 @@ import org.apache.avro.generic.GenericData
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.Partitioner
-import org.apache.spark.sql.avro.AvroDeserializer
+import org.apache.spark.sql.avro.{AvroDeserializer, AvroSerializerHelper}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.{array, col, expr}
@@ -144,7 +144,7 @@ object SparkAvroBtreeUtils {
 
           val avroBtreeStorageFileReader = AvroHashBtreeStorageFolderReader(folder).getFile(keys.map(row.getAs[Any]))
           val kvIt = avroBtreeStorageFileReader.getIterator().buffered
-          val converter = new AvroDeserializer(avroBtreeStorageFileReader.fileReader.getValueSchema, indexTableValueSchema)
+          val converter = AvroSerializerHelper.avroDeserializer(avroBtreeStorageFileReader.fileReader.getValueSchema, indexTableValueSchema)
 
           bufIt.flatMap(row => {
             val key1GR = avroBtreeStorageFileReader.toGR(keys.map(row.getAs[Any]))
@@ -163,7 +163,7 @@ object SparkAvroBtreeUtils {
               // taking the dsDF's data without the last two fields (keyhash, prthash)
               // and the value record from the avro-btree file
               Iterator(Row.fromSeq(row.toSeq.slice(0, row.size - 2) ++
-                converter.deserialize(nxt._2).asInstanceOf[InternalRow].toSeq(indexTableValueSchema).map {
+                converter(nxt._2).get.asInstanceOf[InternalRow].toSeq(indexTableValueSchema).map {
                   case f: UTF8String => f.toString
                   case f => f
                 }))

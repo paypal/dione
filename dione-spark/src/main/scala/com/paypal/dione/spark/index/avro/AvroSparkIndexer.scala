@@ -8,7 +8,7 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.avro.AvroDeserializer
+import org.apache.spark.sql.avro.{AvroDeserializer, AvroSerializerHelper}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.unsafe.types.UTF8String
@@ -26,18 +26,18 @@ case class AvroSparkIndexer(@transient spark: SparkSession) extends SparkIndexer
   override type T = GenericRecord
 
   private var avroHdfsIndexer: AvroIndexer = _
-  private var converter: AvroDeserializer = _
+  private var converter: Any => Option[Any] = _
   private var fieldsSchema: StructType = _
 
   def initHdfsIndexer(file: Path, conf: Configuration, start: Long, end: Long, fieldsSchema: StructType): HdfsIndexer[GenericRecord] = {
     avroHdfsIndexer = AvroIndexer(file, start, end, conf)
     this.fieldsSchema = fieldsSchema
-    converter = new AvroDeserializer(avroHdfsIndexer.getSchema(), fieldsSchema)
+    converter = AvroSerializerHelper.avroDeserializer(avroHdfsIndexer.getSchema(), fieldsSchema)
     avroHdfsIndexer
   }
 
   def convert(gr: GenericRecord): Seq[Any] = {
-    converter.deserialize(gr).asInstanceOf[InternalRow].toSeq(fieldsSchema).map {
+    converter(gr).get.asInstanceOf[InternalRow].toSeq(fieldsSchema).map {
       case f: UTF8String => f.toString
       case f => f
     }

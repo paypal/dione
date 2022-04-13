@@ -45,7 +45,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ '2.7', '3.6' ]
+        python-version: [ '3.6' ]
 
     steps:
       - name: Download the artifacts
@@ -70,5 +70,5 @@ jobs:
           find .
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
-          pip install pytest pyspark==2.4.8
+          pip install pytest pyspark==3.1.2
           pytest -v

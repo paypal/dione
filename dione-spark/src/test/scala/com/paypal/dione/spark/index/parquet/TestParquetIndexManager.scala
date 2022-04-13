@@ -89,7 +89,7 @@ class TestParquetIndexManager {
   @Order(5)
   @Test
   def testNoSparkGetAndFetch(): Unit = {
-    val basePath = baseTestPath + "hive/index_parquet_tbl/"
+    val basePath = "spark-warehouse/" + baseTestPath + "hive/index_parquet_tbl/"
     val specificIndexFolder = basePath + "dt=2018-10-04"
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(specificIndexFolder)
     val valueOpt = avroHashBtreeFolderReader.get(Seq("msg_25", "sub_msg_25"))

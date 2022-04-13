@@ -48,7 +48,7 @@ class TestAvroDecimalConverter {
     spark.range(20).select(
       $"id" cast "decimal(10, 5)" as "id", // regular decimal as key
       $"id" cast "decimal(10, 5)" as "col1", // regular decimal as additional field
-      lit(null.asInstanceOf[Int]) cast "decimal(10, 10)" as "col2", // null decimal
+      lit(null) cast "decimal(10, 10)" as "col2", // null decimal
       $"id" as "col3",
       concat(lit("data_"), $"id") as "data"
     )

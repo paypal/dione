@@ -9,7 +9,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapreduce.TaskAttemptContext
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.avro.{AvroSerializer, SchemaConverters}
+import org.apache.spark.sql.avro.{AvroSerializerHelper, SchemaConverters}
 import org.apache.spark.sql.catalyst.{CatalystTypeConverters, InternalRow}
 import org.apache.spark.sql.execution.datasources.OutputWriter
 import org.apache.spark.sql.types._
@@ -44,13 +44,13 @@ class AvroBtreeOutputWriter( path: String,
   private lazy val internalRowConverter =
     CatalystTypeConverters.createToScalaConverter(schema).asInstanceOf[InternalRow => Row]
 
-  val keysConverter = new AvroSerializer(keysSchema, keysAvroSchema, false)
+  val keysSerializer = AvroSerializerHelper.avroSerializer(keysSchema, keysAvroSchema, false)
   private lazy val rowKeyConverter = (row:InternalRow) =>
-    rowToGenericRecord(row, jobOptions.keyFields, keysConverter.serialize)
+    rowToGenericRecord(row, jobOptions.keyFields, keysSerializer)
 
-  val valuesConverter = new AvroSerializer(valuesSchema, valuesAvroSchema, false)
+  val valuesSerializer = AvroSerializerHelper.avroSerializer(valuesSchema, valuesAvroSchema, false)
   private lazy val rowValueConverter = (row:InternalRow) =>
-    rowToGenericRecord(row, jobOptions.valueFields, valuesConverter.serialize)
+    rowToGenericRecord(row, jobOptions.valueFields, valuesSerializer)
 
   var writer: Writer = {
     val codecFactory = CodecFactory.fromString(jobOptions.compression)
