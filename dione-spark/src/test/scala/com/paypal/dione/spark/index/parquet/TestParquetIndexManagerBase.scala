@@ -18,5 +18,5 @@ class TestParquetIndexManagerBase extends TestIndexManagerBase {
 
   }
 
-  val testSamples = Seq(SampleTest("msg_100", Seq("meta_100"), "var_a_100", 0, 22, -1))
+  val testSamples = Seq(SampleTest("msg_100", Seq("meta_100"), "var_a_100", Some("{k=v100}"), 0, 75, -1))
 }

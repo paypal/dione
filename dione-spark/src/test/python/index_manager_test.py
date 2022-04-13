@@ -83,11 +83,11 @@ def test_fetch(spark_session):
     r = im.fetch(["c66_0"], [("dt", "2021-09-14")], ["col12"])
     assert(r["col12"] == "c66_12")
 
-# @pytest.mark.usefixtures("spark_session")
-# def test_fetch_dict(spark_session):
-#     im = IndexManager.load(spark_session, "local_tbl_p_idx")
-#     r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col_map"])
-#     assert(dict(r["col_map"]) == {"c6_5": "c6_7"})
+@pytest.mark.usefixtures("spark_session")
+def test_fetch_dict(spark_session):
+    im = IndexManager.load(spark_session, "local_tbl_p_idx")
+    r = im.fetch(["c6_0"], [("dt", "2021-09-14")], ["col_map"])
+    assert(dict(r["col_map"]) == {"c6_5": "c6_7"})
 
 # @pytest.mark.usefixtures("spark_session")
 # def test_fetch_list(spark_session):
