@@ -32,6 +32,7 @@ case class ParquetIndexer(file: Path, start: Long, end: Long, conf: Configuratio
     fileReader.initialize(reader, conf, projectedSchema.get.getFields.map(_.name()).toSet.asJava)
   } else {
     conf.unset(AvroReadSupport.AVRO_REQUESTED_PROJECTION)
+    conf.unset("parquet.avro.read.schema")
     fileReader.initialize(reader, conf, null)
   }
 

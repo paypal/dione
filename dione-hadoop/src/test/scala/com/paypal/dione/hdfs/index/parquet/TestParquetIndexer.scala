@@ -78,8 +78,7 @@ class TestParquetIndexer {
     (1 to 4).foreach(_ => parquetIndexer.next())
 
     val gr = parquetIndexer.next()
-    Assertions.assertEquals("{\"val1\": null, \"val2\": 5, \"val3\": \"10\", \"val4\": null}",
-      gr.toString)
+    Assertions.assertEquals("{\"val2\": 5, \"val3\": \"10\"}", gr.toString)
   }
 
   @Order(4)
