@@ -10,7 +10,13 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 case class IndexSpec(dataTableName: String, indexTableName: String,
-                     keys: Seq[String], moreFields: Seq[String] = Nil)
+                     keys: Seq[String], moreFields: Seq[String] = Nil) {
+
+  def getFields: Seq[String] = {
+    keys ++ moreFields
+  }
+
+}
 
 object IndexManager {
 
