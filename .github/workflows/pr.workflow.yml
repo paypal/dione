@@ -70,5 +70,6 @@ jobs:
           find .
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
-          pip install pytest pypandoc==1.7.5 pyspark==2.4.8
+          pip install pypandoc==1.7.5
+          pip install pytest pyspark==2.4.8
           pytest -v

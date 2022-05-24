@@ -4,6 +4,8 @@ import com.paypal.dione.SparkCleanTestDB
 import com.paypal.dione.spark.Dione
 import com.paypal.dione.spark.index.{IndexManager, IndexSpec}
 import com.paypal.dione.spark.index.avro.TestAvroIndexManagerJoin.spark
+import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
+import org.apache.spark.sql.execution.datasources.LogicalRelation
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
 
@@ -58,10 +60,12 @@ class TestIndexRule {
   def testFilter(): Unit = {
     Dione.enable(spark)
     Dione.getContext.addIndex(indexSpec)
-    val dsDF = spark.table("t_rule").select("key", "sub_key")//.where("key == 7")
+    val dsDF = spark.table("t_rule").select("key", "sub_key")
 
-    dsDF.show()
-    dsDF.explain(true)
+    Assertions.assertEquals(dsDF.queryExecution.optimizedPlan.collect {
+      case h: HiveTableRelation =>
+        h.tableMeta.identifier.identifier
+    }, Seq("t_rule_index"))
   }
 
 }
