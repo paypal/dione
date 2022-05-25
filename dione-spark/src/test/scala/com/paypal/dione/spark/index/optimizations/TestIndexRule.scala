@@ -57,7 +57,7 @@ class TestIndexRule {
 
   @Test
   @Order(3)
-  def testFilter(): Unit = {
+  def testCoveringProject(): Unit = {
     Dione.enable(spark)
     Dione.getContext.addIndex(indexSpec)
     val dsDF = spark.table("t_rule").select("key", "sub_key")
@@ -68,4 +68,14 @@ class TestIndexRule {
     }, Seq("t_rule_index"))
   }
 
+  @Test
+  @Order(3)
+  def testFilter(): Unit = {
+    Dione.enable(spark)
+    Dione.getContext.addIndex(indexSpec)
+    val dsDF = spark.table("t_rule").select("key", "sub_key").where("key == 7")
+
+    dsDF.explain(true)
+    dsDF.show()
+  }
 }
