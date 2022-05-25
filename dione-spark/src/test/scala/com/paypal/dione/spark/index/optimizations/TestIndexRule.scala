@@ -77,5 +77,9 @@ class TestIndexRule {
 
     dsDF.explain(true)
     dsDF.show()
+    Assertions.assertEquals(dsDF.queryExecution.optimizedPlan.collect {
+      case h: HiveTableRelation =>
+        h.tableMeta.identifier.identifier
+    }, Seq("t_rule_index"))
   }
 }
