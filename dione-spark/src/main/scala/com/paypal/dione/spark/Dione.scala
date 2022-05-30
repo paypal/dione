@@ -1,5 +1,6 @@
 package com.paypal.dione.spark
 
+import com.paypal.dione.spark.execution.DioneIndexStrategy
 import org.apache.spark.sql.SparkSession
 
 object Dione {
@@ -20,5 +21,6 @@ object Dione {
 
   def enable(spark: SparkSession): Unit = {
     spark.sessionState.experimentalMethods.extraOptimizations ++= DioneRule :: Nil
+    spark.sessionState.experimentalMethods.extraStrategies ++= DioneIndexStrategy :: Nil
   }
 }

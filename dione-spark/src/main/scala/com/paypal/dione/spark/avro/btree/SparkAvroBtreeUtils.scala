@@ -68,7 +68,7 @@ object SparkAvroBtreeUtils {
     val partitionKeys = partitionsSpec.flatMap(_._1.map(_._1)).distinct
     val remainingColumns = df.columns.filterNot(c => keysSet.contains(c) || partitionKeys.contains(c))
 
-    logger.info("writing index file to " + folderName + s" with interval: $interval, height: $height," +
+    logger.info("writing index file to " + folderName + s", with interval: $interval, height: $height," +
       s" partitionsSpec: $partitionsSpec")
 
     val repartitionedDF = customRepartition(df, keys, partitionsSpec)

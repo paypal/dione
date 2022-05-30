@@ -1,11 +1,13 @@
 package com.paypal.dione.spark.index
 
-import com.paypal.dione.hdfs.index.HdfsIndexer
+import com.paypal.dione.hdfs.index.HdfsIndexContants.FILE_NAME_COLUMN
+import com.paypal.dione.hdfs.index.{HdfsIndexer, HdfsIndexerMetadata}
 import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types.StructType
+import org.slf4j.LoggerFactory
 
 /**
  * wrapper trait between to use HdfsIndexer inside Spark.
@@ -21,6 +23,8 @@ import org.apache.spark.sql.types.StructType
  */
 trait SparkIndexer {
 
+  private val logger = LoggerFactory.getLogger(this.getClass)
+
   type T >: Null
 
   @transient val spark: SparkSession
@@ -32,6 +36,7 @@ trait SparkIndexer {
   }
 
   def convert(t: T): Seq[Any]
+
   def convertMap(t: T): Map[String, Any]
 
   /**
@@ -46,7 +51,12 @@ trait SparkIndexer {
   }
 
   def readPayload(indexGR: GenericRecord, payloadSchema: StructType): Map[String, Any] = {
-    IndexReader(spark, this, payloadSchema, false).readPayload(indexGR)
+    logger.debug("initializing file: " + indexGR.get(FILE_NAME_COLUMN).toString)
+    val hdfsIndexer = initHdfsIndexer(new Path(indexGR.get(FILE_NAME_COLUMN).toString),
+      new Configuration(), payloadSchema)
+    val hdfsIndexMetadata = HdfsIndexerMetadata(indexGR)
+    val fetchedT = hdfsIndexer.fetch(hdfsIndexMetadata)
+    convertMap(fetchedT)
   }
 
   def loadByIndex(index: DataFrame, payloadSchema: StructType): DataFrame = {

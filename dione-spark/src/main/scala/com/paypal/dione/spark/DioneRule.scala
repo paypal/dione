@@ -1,6 +1,7 @@
 package com.paypal.dione.spark
 
-import com.paypal.dione.spark.index.{IndexManagerUtils, IndexSpec}
+import com.paypal.dione.spark.index.{IndexManagerUtils, IndexManager}
+import com.paypal.dione.spark.sql.catalyst.catalog.HiveIndexTableRelation
 import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
 import org.apache.spark.sql.catalyst.expressions.AttributeReference
 import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan, Project}
@@ -14,8 +15,8 @@ object DioneRule extends Rule[LogicalPlan] {
 
       // For a query covering index we switch between the original table and the index table
       case p @ Project(_, h @ HiveTableRelation(_, _, _))
-        if getQualifiedIndex(h, p.projectList.map(_.name)).nonEmpty =>
-        val idx = getQualifiedIndex(h, p.projectList.map(_.name)).get
+        if getCoveringIndex(h, p.projectList.map(_.name)).nonEmpty =>
+        val idx = getCoveringIndex(h, p.projectList.map(_.name)).get
         val indexCatalogTable = IndexManagerUtils.getSparkCatalogTable(Dione.getContext.spark,
           idx.indexTableName)
         val updatedAttributes = toAttributes(indexCatalogTable.dataSchema,
@@ -23,16 +24,19 @@ object DioneRule extends Rule[LogicalPlan] {
         p.copy(p.projectList,
           child = h.copy(tableMeta = indexCatalogTable, dataCols = updatedAttributes))
 
+      // For a data lookup index we add relevant information to later use in the strategy
+      // (we might need to move the supported logic from the strategy to here..)
       case p @ Project(_, f @ Filter(_, h @ HiveTableRelation(_, _, _)))
-        if getQualifiedIndex(h, p.references.map(_.name).toSeq).nonEmpty =>
-        val idx = getQualifiedIndex(h, p.references.map(_.name).toSeq).get
+        if getIndexForTable(h).nonEmpty =>
+        val idx = getIndexForTable(h).get
         val indexCatalogTable = IndexManagerUtils.getSparkCatalogTable(Dione.getContext.spark,
           idx.indexTableName)
         val updatedAttributes = toAttributes(indexCatalogTable.dataSchema,
           h.dataCols.filter(dc => p.references.map(_.name).toSet.contains(dc.name)))
         p.copy(p.projectList,
           child = f.copy(f.condition,
-            child = h.copy(tableMeta = indexCatalogTable, dataCols = updatedAttributes)))
+            child = new HiveIndexTableRelation(tableMeta = indexCatalogTable, dataCols = updatedAttributes,
+              partitionCols = h.partitionCols, h, idx)))
     }
   }
 
@@ -43,8 +47,11 @@ object DioneRule extends Rule[LogicalPlan] {
       .map(f => origMap.getOrElse(f.name, AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()))
   }
 
-  def getQualifiedIndex(h: HiveTableRelation, referencedAtts: Seq[String]): Option[IndexSpec] = {
+  def getCoveringIndex(h: HiveTableRelation, referencedAtts: Seq[String]): Option[IndexManager] = {
     Dione.getContext.indices.getOrElse(h.tableMeta.identifier.identifier, Nil)
-      .find(ci => referencedAtts.forall(ci.getFields.contains))
+      .find(ci => referencedAtts.forall(ci.indexSpec.getFields.contains))
+  }
+  def getIndexForTable(h: HiveTableRelation): Option[IndexManager] = {
+    Dione.getContext.indices.getOrElse(h.tableMeta.identifier.identifier, Nil).headOption
   }
 }
