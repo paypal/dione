@@ -41,7 +41,7 @@ class TestAvroIndexManager {
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created")))(spark)
+    IndexManager.createNew("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created"))
     spark.sql("desc formatted index_t3").show(100, false)
   }
 

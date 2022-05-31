@@ -57,7 +57,8 @@ class TestAvroDecimalConverter {
     spark.table("foo").show(false)
     spark.table("foo").printSchema()
 
-    def create() = IndexManager.createNew(IndexSpec("foo", "index", Seq("id"), Seq("col1", "col2", "col3")))(spark)
+    def create() = IndexManager.createNew(IndexSpec.create("foo", "index",
+      Seq("id"), Seq("col1", "col2", "col3")))
 
     // without setting indexer.castDecimalToDouble=true, should fail:
     Assertions.assertThrows(classOf[IllegalArgumentException], new Executable {

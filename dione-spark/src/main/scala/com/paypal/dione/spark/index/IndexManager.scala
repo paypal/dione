@@ -9,8 +9,28 @@ import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+object IndexSpec {
+  def create(dataTableName: String, indexTableName: String,
+            keys: Seq[String], moreFields: Seq[String] = Nil)(implicit sparkSession: SparkSession): IndexSpec = {
+    new IndexSpec(toFullTableName(dataTableName), toFullTableName(indexTableName), keys, moreFields)
+  }
+
+  private def toFullTableName(tableName: String)(implicit sparkSession: SparkSession): String = {
+    tableName.split('.') match {
+      case Array(_, _) =>
+        tableName
+      case Array(onlyTableName) =>
+        sparkSession.catalog.currentDatabase + "." + onlyTableName
+    }
+  }
+}
+
 case class IndexSpec(dataTableName: String, indexTableName: String,
                      keys: Seq[String], moreFields: Seq[String] = Nil) {
+
+  require(keys.nonEmpty, "you must provide at least one key")
+  require(dataTableName.contains("."), dataTableName + " must include DB name")
+  require(indexTableName.contains("."), indexTableName + " must include DB name")
 
   def getFields: Seq[String] = {
     keys ++ moreFields
@@ -36,6 +56,11 @@ object IndexManager {
    * @param spark
    * @return
    */
+  def createNew(dataTableName: String, indexTableName: String,
+                keys: Seq[String], moreFields: Seq[String] = Nil)(implicit spark: SparkSession): IndexManager = {
+    createNew(IndexSpec.create(dataTableName, indexTableName, keys, moreFields))
+  }
+
   def createNew(indexSpec: IndexSpec)(implicit spark: SparkSession): IndexManager = {
 
     // TODO: assert index table doesn't exist
@@ -64,7 +89,7 @@ object IndexManager {
     val dataTableName = tblProperties("index.meta.dataTableName")
     val keys = tblProperties("index.meta.keys").split("\\|")
     val moreFields = tblProperties("index.meta.moreFields").split("\\|").filterNot(_.isEmpty)
-    val indexSpec = IndexSpec(dataTableName, indexTableName, keys, moreFields)
+    val indexSpec = IndexSpec.create(dataTableName, indexTableName, keys, moreFields)
 
     // TODO - add the manager class to the table metadata, and pass explicitly here:
     val indexManager: IndexManager = IndexManagerUtils.createIndexManager(spark, indexSpec)

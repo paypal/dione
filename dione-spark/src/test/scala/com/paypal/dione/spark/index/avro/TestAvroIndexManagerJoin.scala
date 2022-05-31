@@ -41,13 +41,13 @@ class TestAvroIndexManagerJoin {
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("t_join", "t_join_index", Seq("key"), Seq("ts")))(spark)
+    IndexManager.createNew("t_join", "t_join_index", Seq("key"), Seq("ts"))
   }
 
   @Test
   @Order(2)
   def testAppendNewPartitions(): Unit = {
-    val indexManager = IndexManager.load("t_join_index")(spark)
+    val indexManager = IndexManager.load("t_join_index")
     spark.conf.set("index.manager.btree.num.parts", "2")
     spark.conf.set("index.manager.btree.interval", "3")
     spark.conf.set("index.manager.btree.height", "2")

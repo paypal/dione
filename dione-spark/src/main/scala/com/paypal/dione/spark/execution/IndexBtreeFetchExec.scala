@@ -22,35 +22,27 @@ import com.paypal.dione.spark.Dione
 import com.paypal.dione.spark.index.IndexManager
 import com.paypal.dione.spark.sql.catalyst.catalog.HiveIndexTableRelation
 import org.apache.avro.util.Utf8
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hive.ql.metadata.{Partition => HivePartition}
-import org.apache.hadoop.hive.ql.plan.TableDesc
-import org.apache.hadoop.hive.serde.serdeConstants
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorUtils.ObjectInspectorCopyOption
-import org.apache.hadoop.hive.serde2.objectinspector._
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils
-import org.apache.spark.{Partition, TaskContext}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.CastSupport
-import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.plans.QueryPlan
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.execution.metric.SQLMetrics
 import org.apache.spark.sql.hive._
-import org.apache.spark.sql.hive.client.HiveClientImpl
-import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types.{BooleanType, DataType, StructType}
 import org.apache.spark.unsafe.types.UTF8String
-import org.apache.spark.util.Utils
+import org.apache.spark.{Partition, TaskContext}
+
 
 import scala.collection.JavaConverters._
+import scala.collection.JavaConversions._
+
 
 /**
+ * copied and changed from HiveTableScanExec
  */
-case class IndexBtreeScanExec(
+case class IndexBtreeFetchExec(
                                requestedAttributes: Seq[Attribute],
                                indexRelation: HiveIndexTableRelation,
                                idx: IndexManager,
@@ -61,7 +53,7 @@ case class IndexBtreeScanExec(
 
   def sparkSession = Dione.getContext.spark
 
-  override def nodeName: String = s"Scan Index ${indexRelation.tableMeta.qualifiedName}"
+  override def nodeName: String = s"Fetch From Index ${indexRelation.tableMeta.qualifiedName}"
 
   override lazy val metrics = Map(
     "numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"))
@@ -88,57 +80,10 @@ case class IndexBtreeScanExec(
   }
 
   @transient private lazy val hiveQlTable = SparkSqlHiveUtils.toHiveTable(indexRelation.tableMeta)
-//  @transient private lazy val tableDesc = new TableDesc(
-//    hiveQlTable.getInputFormatClass,
-//    hiveQlTable.getOutputFormatClass,
-//    hiveQlTable.getMetadata)
-
-  // Create a local copy of hadoopConf,so that scan specific modifications should not impact
-  // other queries
-//  @transient private lazy val hadoopConf = {
-//    val c = sparkSession.sessionState.newHadoopConf()
-//     append columns ids and names before broadcast
-//    addColumnMetadataToConf(c)
-//    c
-//  }
-
-//  @transient private lazy val hadoopReader = new HadoopTableReader(
-//    output,
-//    relation.partitionCols,
-//    tableDesc,
-//    sparkSession,
-//    hadoopConf)
 
   private def castFromString(value: String, dataType: DataType) = {
     cast(Literal(value), dataType).eval(null)
   }
-
-//  private def addColumnMetadataToConf(hiveConf: Configuration): Unit = {
-//    // Specifies needed column IDs for those non-partitioning columns.
-//    val columnOrdinals = AttributeMap(relation.dataCols.zipWithIndex)
-//    val neededColumnIDs = output.flatMap(columnOrdinals.get).map(o => o: Integer)
-//
-//    HiveShim.appendReadColumns(hiveConf, neededColumnIDs, output.map(_.name))
-//
-//    val deserializer = tableDesc.getDeserializerClass.newInstance
-//    deserializer.initialize(hiveConf, tableDesc.getProperties)
-//
-//    // Specifies types and object inspectors of columns to be scanned.
-//    val structOI = ObjectInspectorUtils
-//      .getStandardObjectInspector(
-//        deserializer.getObjectInspector,
-//        ObjectInspectorCopyOption.JAVA)
-//      .asInstanceOf[StructObjectInspector]
-//
-//    val columnTypeNames = structOI
-//      .getAllStructFieldRefs.asScala
-//      .map(_.getFieldObjectInspector)
-//      .map(TypeInfoUtils.getTypeInfoFromObjectInspector(_).getTypeName)
-//      .mkString(",")
-//
-//    hiveConf.set(serdeConstants.LIST_COLUMN_TYPES, columnTypeNames)
-//    hiveConf.set(serdeConstants.LIST_COLUMNS, relation.dataCols.map(_.name).mkString(","))
-//  }
 
   /**
    * Prunes partitions not involve the query plan.
@@ -184,8 +129,8 @@ case class IndexBtreeScanExec(
 
     new RDD[InternalRow](Dione.getContext.spark.sparkContext, Nil) {
       override def compute(split: Partition, context: TaskContext): Iterator[InternalRow] = {
-        val idxSplit = split.asInstanceOf[IndexFilePartition]
-        val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(idxSplit.files.head.filePath)
+        val idxSplit = split.asInstanceOf[IndexPartition]
+        val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(idxSplit.path)
 
         val blahUTF2 = (a: Any) => a match {
           case x: UTF8String => x.toString
@@ -194,7 +139,7 @@ case class IndexBtreeScanExec(
 
         val valueIter = avroHashBtreeFolderReader.getIterator(keys.map(k => blahUTF2(k.value)))
 
-        val blahUTF = (a: Any) => a match {
+        val blahUTF8 = (a: Any) => a match {
           case x: Utf8 => UTF8String.fromString(x.toString)
           case x: String => UTF8String.fromString(x)
           case x => x
@@ -204,31 +149,39 @@ case class IndexBtreeScanExec(
         val idxRequestedFields = requestedAttributes.map(_.name)
           .filter(idx.moreFields.contains)
 
-        val dataFieldsMap = indexRelation.hiveDataTableRelation.schema.fields.map(f => f.name -> f).toMap
-        val dataRequestedFields = requestedAttributes.map(_.name)
-          .filter(f => dataFieldsMap.contains(f))
-          .filterNot(f => idxRequestedFields.contains(f))
-          .filterNot(f => idx.keys.contains(f))
+        val partitionMap = (indexRelation.partitionCols zip idxSplit.prtValues).map(p => p._1.name -> p._2).toMap
 
+        val keysMap = (idx.keys zip keys).map(x => x._1 -> x._2.value).toMap
+
+        val dataFieldsMap = indexRelation.hiveDataTableRelation.schema.fields.map(f => f.name -> f).toMap
+        val allButDataFieldsSet = (idxRequestedFields ++ partitionMap.keys ++ keysMap.keys).toSet
+        val dataRequestedFields = requestedAttributes.map(_.name)
+          .filterNot(f => allButDataFieldsSet.contains(f))
         val dataSchema = dataRequestedFields.map(f => dataFieldsMap(f))
 
         valueIter.map(indexGR => {
-          val indexSeq = keys.map(k => k.value) ++ idxRequestedFields.map(reqAtt => blahUTF(indexGR.get(reqAtt)))
           val dataMap = idx.sparkIndexer.readPayload(indexGR, StructType(dataSchema))
-          val dataSeq = dataRequestedFields.map(reqAtt => blahUTF(dataMap(reqAtt)))
-          val c = cnvrt(InternalRow.fromSeq(indexSeq ++ dataSeq))
+
+          val retSeq = requestedAttributes.map(_.name).map {
+            case f if idx.moreFields.contains(f) => indexGR.get(f)
+            case f if keysMap.contains(f) => keysMap(f)
+            case f if partitionMap.contains(f) => partitionMap(f)
+            case f if dataMap.contains(f) => dataMap(f)
+            case f => throw new RuntimeException(s"Field $f not found")
+          }.map(blahUTF8)
+
+          val c = cnvrt(InternalRow.fromSeq(retSeq))
           c
         })
       }
 
       override protected def getPartitions: Array[Partition] = {
         val pp = prunePartitions(rawPartitions)
-        pp.zipWithIndex.map(p => IndexFilePartition(p._2, Seq(IndexFile(p._1.getLocation)))).toArray
+        pp.zipWithIndex.map(p => IndexPartition(p._2, p._1.getValues.toList, p._1.getLocation)).toArray
       }
     }
   }
 
 }
 
-case class IndexFile(filePath: String)
-case class IndexFilePartition(index: Int, files: Seq[IndexFile]) extends Partition
+case class IndexPartition(index: Int, prtValues: List[String], path: String) extends Partition
