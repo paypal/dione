@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.TableIdentifier
 
 import scala.collection.mutable
 
-case class DioneContext(spark: SparkSession) {
+case class DioneContext(implicit spark: SparkSession) {
 
   val indices: mutable.Map[String, Seq[IndexManager]] = mutable.HashMap()
 
@@ -20,5 +20,6 @@ case class DioneContext(spark: SparkSession) {
       indices.getOrElse(indexManager.dataTableName, Seq()) ++ Seq(indexManager))
   }
 
+  def addIndex(indexTable: String): Unit = addIndex(IndexManager.load(indexTable))
 
 }

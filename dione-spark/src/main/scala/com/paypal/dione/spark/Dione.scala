@@ -9,7 +9,7 @@ object Dione {
 
   def getContext(spark: SparkSession): DioneContext = {
     if (Option(dioneContext).isEmpty)
-      dioneContext = DioneContext(spark)
+      dioneContext = DioneContext()(spark)
     dioneContext
   }
 
