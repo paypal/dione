@@ -25,3 +25,5 @@ tmp
 
 TestData
 settings-ossrh.xml
+
+.ipynb_checkpoints

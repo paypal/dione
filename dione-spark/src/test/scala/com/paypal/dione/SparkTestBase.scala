@@ -23,6 +23,7 @@ trait SparkTestBase {
     spark.conf.set("indexer.sampler.files.rate", "1.0")
     spark
   }
+  implicit def ss: SparkSession = spark
 
   lazy val hadoopConf = spark.sparkContext.hadoopConfiguration
   lazy val fs: FileSystem = FileSystem.get(hadoopConf)

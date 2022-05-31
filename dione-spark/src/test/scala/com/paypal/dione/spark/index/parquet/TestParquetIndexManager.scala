@@ -45,20 +45,20 @@ class TestParquetIndexManager {
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("parquet_tbl", "index_parquet_tbl", Seq("message_id", "sub_message_id"), Seq("time_result_created")))(spark)
+    IndexManager.createNew("parquet_tbl", "index_parquet_tbl", Seq("message_id", "sub_message_id"), Seq("time_result_created"))
     //spark.sql("desc formatted parquet_tbl").show(100, false)
   }
 
   @Test
   @Order(2)
   def testLoadIndexManager(): Unit = {
-    IndexManager.load("index_parquet_tbl")(spark)
+    IndexManager.load("index_parquet_tbl")
   }
 
   @Test
   @Order(3)
   def testAppendNewPartitions(): Unit = {
-    val indexManager = IndexManager.load("index_parquet_tbl")(spark)
+    val indexManager = IndexManager.load("index_parquet_tbl")
     indexManager.appendMissingPartitions()
 
     //spark.table("index_parquet_tbl").show(100, false)
@@ -73,7 +73,7 @@ class TestParquetIndexManager {
   @Test
   @Order(4)
   def testLoadByIndex(): Unit = {
-    val indexManager = IndexManager.load("index_parquet_tbl")(spark)
+    val indexManager = IndexManager.load("index_parquet_tbl")
     val queryDF = indexManager.getIndex().where("message_id like '%g_2%' and dt='2018-10-04'")
     //queryDF.show(1000, false)
 

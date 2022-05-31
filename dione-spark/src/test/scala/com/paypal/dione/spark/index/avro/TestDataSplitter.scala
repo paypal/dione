@@ -38,7 +38,7 @@ case class DataSplitTester(spark: SparkSession, expectedNumChunks: Int, dataTabl
   def fullE2ETest(): Unit = {
     spark.conf.set("indexer.files.chunkMB", 1)
 
-    val manager = IndexManager.createNew(IndexSpec(dataTable, indexTable, Seq("id"), Seq("col1")))(spark)
+    val manager = IndexManager.createNew(dataTable, indexTable, Seq("id"), Seq("col1"))(spark)
     manager.appendMissingPartitions()
     val index = manager.getIndex()
 

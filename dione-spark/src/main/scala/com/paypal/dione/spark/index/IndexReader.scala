@@ -37,15 +37,6 @@ case class IndexReader(@transient spark: SparkSession, sparkIndexer: SparkIndexe
 
   def read(index: DataFrame): DataFrame = IndexReader.read(index, this)
 
-  def readPayload[T](indexGR: GenericRecord): Map[String, Any] = {
-    logger.debug("initing file: " + indexGR.get(FILE_NAME_COLUMN).toString)
-    val hdfsIndexer = sparkIndexer.initHdfsIndexer(new Path(indexGR.get(FILE_NAME_COLUMN).toString),
-      new Configuration(), fieldsSchema)
-    val hdfsIndexMetadata = HdfsIndexerMetadata(indexGR)
-    val fetchedT = hdfsIndexer.fetch(hdfsIndexMetadata)
-    sparkIndexer.convertMap(fetchedT)
-  }
-
   private def init() = {
     reporter.initPartitionMetrics()
   }

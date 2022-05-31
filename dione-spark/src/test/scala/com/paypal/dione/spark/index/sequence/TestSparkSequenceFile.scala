@@ -84,7 +84,7 @@ class TestSparkSequenceFile {
   @Test
   def createNewIndex: Unit = {
     // dummy test to ensure initialization
-    val indexer = IndexManager.createNew(IndexSpec("foo", "index", Seq("id"), Seq("col0", "col1")))(spark)
+    val indexer = IndexManager.createNew("foo", "index", Seq("id"), Seq("col0", "col1"))
 
     assertEquals(0, spark.table(indexer.indexTableName).count())
   }
@@ -92,7 +92,7 @@ class TestSparkSequenceFile {
   @Order(2)
   @Test
   def addNewPartition: Unit = {
-    val indexer = IndexManager.load("index")(spark)
+    val indexer = IndexManager.load("index")
 
     spark.conf.set("index.manager.btree.parts", 5)
 
@@ -122,7 +122,7 @@ class TestSparkSequenceFile {
   @Test
   def testLoadByIndex(): Unit = {
     import spark.implicits._
-    val indexManager = IndexManager.load("index")(spark)
+    val indexManager = IndexManager.load("index")
     val indexTable = indexManager.getIndex()
 
 
