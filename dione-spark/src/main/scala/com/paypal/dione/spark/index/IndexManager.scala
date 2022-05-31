@@ -1,5 +1,6 @@
 package com.paypal.dione.spark.index
 
+import com.paypal.dione.avro.hadoop.file.AvroBtreeFile
 import com.paypal.dione.hdfs.index.HdfsIndexContants.{FILE_NAME_COLUMN, OFFSET_COLUMN, SIZE_COLUMN, SUB_OFFSET_COLUMN}
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
 import com.paypal.dione.spark.avro.btree.SparkAvroBtreeUtils
@@ -48,6 +49,8 @@ object IndexManager {
     StructField(SUB_OFFSET_COLUMN, IntegerType),
     StructField(SIZE_COLUMN, IntegerType)
   ))
+
+  lazy val indexMetaFields = indexSchema.map(_.name).toSet + AvroBtreeFile.METADATA_COL_NAME
 
   /**
    * Creates a new index table on a data table for the given keys.

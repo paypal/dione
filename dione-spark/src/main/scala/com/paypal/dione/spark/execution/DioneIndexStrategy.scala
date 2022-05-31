@@ -2,6 +2,7 @@ package com.paypal.dione.spark.execution
 
 import com.paypal.dione.spark.Dione
 import com.paypal.dione.spark.index.IndexManager
+import com.paypal.dione.spark.index.IndexManager.indexMetaFields
 import com.paypal.dione.spark.sql.catalyst.catalog.HiveIndexTableRelation
 import org.apache.spark.sql.Strategy
 import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
@@ -25,8 +26,9 @@ object DioneIndexStrategy extends Strategy {
 
       val idx = indexRelation.indexManager
 
-        IndexBtreeFetchExec(projectList.flatMap(_.references.toSeq).distinct,
-          indexRelation, idx, pruningPredicates, otherPredicates, indexRelation.literalFilters) :: Nil
+      IndexBtreeFetchExec(projectList.flatMap(_.references.toSeq)
+        .filterNot(p => indexMetaFields.contains(p.name)).distinct,
+        indexRelation, idx, pruningPredicates, otherPredicates, indexRelation.literalFilters) :: Nil
     case _ =>
       Nil
   }

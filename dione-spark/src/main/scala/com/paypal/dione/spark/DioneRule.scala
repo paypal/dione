@@ -42,6 +42,16 @@ object DioneRule extends Rule[LogicalPlan] {
           h.dataCols.filter(dc => p.references.map(_.name).toSet.contains(dc.name)))
         p.copy(child = f.copy(child = new HiveIndexTableRelation(tableMeta = indexCatalogTable,
             dataCols = updatedAttributes, partitionCols = h.partitionCols, h, idx, literalFilter)))
+
+      case f @ Filter(condition, h @ HiveTableRelation(_, _, _))
+        if getSpecificFilter(condition, h).nonEmpty =>
+        val (idx, literalFilter) = getSpecificFilter(condition, h).get
+        val indexCatalogTable = IndexManagerUtils.getSparkCatalogTable(Dione.getContext.spark,
+          idx.indexTableName)
+        val updatedAttributes = toAttributes(indexCatalogTable.dataSchema,
+          h.dataCols.filter(dc => f.references.map(_.name).toSet.contains(dc.name)))
+        f.copy(child = new HiveIndexTableRelation(tableMeta = indexCatalogTable,
+          dataCols = updatedAttributes, partitionCols = h.partitionCols, h, idx, literalFilter))
     }
   }
 

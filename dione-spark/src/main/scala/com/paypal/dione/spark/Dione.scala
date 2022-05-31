@@ -19,8 +19,15 @@ object Dione {
     })
   }
 
-  def enable(spark: SparkSession): Unit = {
+  def enable(implicit spark: SparkSession): Unit = {
     spark.sessionState.experimentalMethods.extraOptimizations ++= DioneRule :: Nil
     spark.sessionState.experimentalMethods.extraStrategies ++= DioneIndexStrategy :: Nil
+  }
+
+  def disable(implicit spark: SparkSession): Unit = {
+    spark.sessionState.experimentalMethods.extraOptimizations =
+      spark.sessionState.experimentalMethods.extraOptimizations.filterNot(_ == DioneRule)
+    spark.sessionState.experimentalMethods.extraStrategies =
+      spark.sessionState.experimentalMethods.extraStrategies.filterNot(_ == DioneIndexStrategy)
   }
 }

@@ -60,46 +60,52 @@ class TestIndexRule {
   @Test
   def testCoveringProject(): Unit = {
     val df = spark.table(tableName).select("key", "sub_key")
-
     AssertPlanUsesTable(df, TestIndexRule.dbName + "." + idxTableName)
-
     Assertions.assertEquals(10, df.collect().length)
   }
 
   @Test
   def testCoveringProjectFilter(): Unit = {
     val df = spark.table(tableName).select("key", "sub_key").where("sub_key=='sub_key_4'")
-
     AssertPlanUsesTable(df, TestIndexRule.dbName + "." + idxTableName)
-
     Assertions.assertEquals("[4,sub_key_4]", df.collect().mkString(","))
   }
 
   @Test
   def testFilterEqualTo(): Unit = {
     val df = spark.table(tableName).select("key", "sub_key", "var2", "var1").where("key == '7'")
-
     AssertPlanUsesTable(df, TestIndexRule.dbName + "." + idxTableName)
-
     Assertions.assertEquals("[7,sub_key_7,7,var_a_7]", df.collect().mkString(","))
   }
-
 
   @Test
   def testFilterEqualToWithPartition(): Unit = {
     val df = spark.table(tableName).select("sub_key", "key", "dt", "var1").where("key == '7'")
-
-        df.explain(true)
+//        df.explain(true)
     //    df.show()
     AssertPlanUsesTable(df, TestIndexRule.dbName + "." + idxTableName)
-
     Assertions.assertEquals("[sub_key_7,7,2021-10-04,var_a_7]", df.collect().mkString(","))
+  }
+
+  @Test
+  def testFilterEqualToStar(): Unit = {
+    val df = spark.table(tableName).where("key == '7'")
+    df.explain(true)
+    AssertPlanUsesTable(df, TestIndexRule.dbName + "." + idxTableName)
+    Assertions.assertEquals("[7,sub_key_7,var_a_7,7,2021-10-04]", df.collect().mkString(","))
+  }
+
+  @Test
+  def testDisabled(): Unit = {
+    Dione.disable(spark)
+    val df = spark.table(tableName).select("sub_key", "key", "dt", "var1").where("key == '7'")
+    AssertPlanUsesTable(df, tableName)
+    Dione.enable(spark)
   }
 
   @Test
   def testNoIndex(): Unit = {
     val df = spark.table("t_rule").select("key", "sub_key", "var2", "var1").where("var2=6")
-
     AssertPlanUsesTable(df, tableName)
   }
 

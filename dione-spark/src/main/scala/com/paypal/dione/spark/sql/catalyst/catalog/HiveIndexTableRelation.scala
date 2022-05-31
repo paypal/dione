@@ -12,4 +12,5 @@ class HiveIndexTableRelation(tableMeta: CatalogTable,
                              val literalFilters: Seq[Literal])
   extends HiveTableRelation(tableMeta, dataCols, partitionCols) {
 
+  override def output: Seq[AttributeReference] = hiveDataTableRelation.output
 }
