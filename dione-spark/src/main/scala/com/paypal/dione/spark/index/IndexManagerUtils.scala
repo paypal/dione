@@ -208,8 +208,8 @@ object IndexManagerUtils {
   def getTablePartitions(keysTableName: String, valuesDF: DataFrame, spark: SparkSession): Seq[Seq[(String, String)]] = {
     val partitionKeys = spark.catalog.listColumns(keysTableName).filter(_.isPartition).collect().map(_.name)
     val partitionValues = valuesDF.selectExpr(partitionKeys:_*).distinct()
-    val valuesMap = partitionValues.collect().map(_.getValuesMap[String](partitionKeys)).distinct
-    valuesMap.map(_.toSeq).toSeq
+    val valuesMap = partitionValues.collect().map(_.getValuesMap[Any](partitionKeys)).distinct
+    valuesMap.map(_.mapValues(_.toString).toSeq).toSeq
   }
 
   def toSafeDataFrame(df: DataFrame): DataFrame = {
