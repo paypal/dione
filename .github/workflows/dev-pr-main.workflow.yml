@@ -70,6 +70,7 @@ jobs:
           find .
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
+          pip install pypandoc==1.7.5
           pip install pytest pyspark==2.3.4
           echo ohad
           AVRO_JAR=$(find $(dirname `which python`)/../ -name "avro-1*.jar")
