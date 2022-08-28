@@ -20,12 +20,12 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
 
   def indexSpec: IndexSpec
 
-  val samplePartition: String = "2021-02-03"
+  val samplePartition: String
 
   case class SampleTest(key: String, moreFields: Seq[String], varValue: String, offset: Long, subOffset: Int, size: Int)
   val testSamples: Seq[SampleTest]
 
-  def initDataTable(fieldsSchema: String, partitionFieldSchema: String): Unit
+  def initDataTable(fieldsSchema: String, partitionFieldName: String): Unit
 
   @Test
   @Order(0)
@@ -34,14 +34,14 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
     import spark.implicits._
 
     initDataTable("id_col string, var1 string, var2 int, meta_field string",
-      "dt string")
+      "dt")
 
     (1 to 300).map(i => ("msg_" + i, "var_a_" + i, i, "meta_"+i))
       .toDF("id_col", "var1", "var2", "meta_field")
       .repartition(3)
       .createOrReplaceTempView("t")
 
-    spark.sql(s"insert overwrite table ${indexSpec.dataTableName} partition (dt='2021-02-03') select * from t")
+    spark.sql(s"insert overwrite table ${indexSpec.dataTableName} partition (dt=${samplePartition}) select * from t")
   }
 
 
@@ -101,7 +101,7 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
   @Order(5)
   @Test
   def testNoSparkGetAndFetch(): Unit = {
-    val showPartition = spark.sql(s"desc formatted ${indexSpec.indexTableName} partition (dt='"+samplePartition+"')").collect()
+    val showPartition = spark.sql(s"desc formatted ${indexSpec.indexTableName} partition (dt="+samplePartition+")").collect()
     val specificIndexFolder = showPartition.find(row => row.getString(0).contains("Location")).get.getString(1)
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(specificIndexFolder)
 
@@ -115,7 +115,7 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
       val hdfsIndexer = indexManager.sparkIndexer.initHdfsIndexer(new Path(gr.get(FILE_NAME_COLUMN).toString), fs.getConf, payloadSchema)
       val tData = hdfsIndexer.fetch(HdfsIndexerMetadata(gr))
       val grData = indexManager.sparkIndexer.convertMap(tData)
-      Assertions.assertEquals(Some(sample.varValue), grData.get("var1"))
+      Assertions.assertEquals(Some(sample.varValue), grData.get("var1").map(_.toString))
     })
   }
 
@@ -124,8 +124,10 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
   def testFetchAll(): Unit = {
     val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
     testSamples.foreach(sample => {
-      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition))
-      Assertions.assertEquals(sample.varValue, vars.get("var1"))
+      // to support also non string partition types we added "'" to the partition value (not the cleanest way)
+      val samplePartitionClean = samplePartition.replace("'", "")
+      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartitionClean))
+      Assertions.assertEquals(sample.varValue, vars.get("var1").toString)
       Assertions.assertEquals("List((id_col,msg_100), (meta_field,meta_100), (var1,var_a_100), (var2,100))",
         vars.get.toList.sortBy(_._1).toString)
     })
@@ -136,7 +138,8 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
   def testFetch(): Unit = {
     val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
     testSamples.foreach(sample => {
-      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartition), Some(Seq("var1")))
+      val samplePartitionClean = samplePartition.replace("'", "")
+      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartitionClean), Some(Seq("var1")))
       Assertions.assertEquals(sample.varValue, vars.get("var1"))
       Assertions.assertFalse(vars.get.contains("var2"))
       Assertions.assertEquals("List((id_col,msg_100), (var1,var_a_100))",
