@@ -18,6 +18,8 @@ object TestAvroIndexer extends AvroExtensions {
   val avroFile = new Path("TestData/hdfs_indexer/avro_file")
   val fileSystem = avroFile.getFileSystem(new Configuration())
 
+  var entries: Seq[(GenericRecord, HdfsIndexerMetadata)] = _
+
   @BeforeAll
   def dataPrep(): Unit = {
 
@@ -53,7 +55,7 @@ class TestAvroIndexer extends AvroExtensions {
   @Test
   @Order(1)
   def testSimpleCreateIndex(): Unit = {
-    val entries = AvroIndexer(avroFile, 0, 1<<30, fileSystem.getConf).iteratorWithMetadata.toList
+    entries = AvroIndexer(avroFile, 0, 1<<30, fileSystem.getConf).iteratorWithMetadata.toList
 
     val schema = SchemaBuilder.record("single_string").fields().requiredString("val1")
       .requiredInt("val2").requiredString("val3").requiredInt("val4").endRecord()
@@ -102,9 +104,10 @@ class TestAvroIndexer extends AvroExtensions {
       Assertions.assertEquals("8", gr.get("val3").asInstanceOf[Utf8].toString)
     }
 
-    (6 to 14).foreach(i => {
-      val gr = avroIndexer.fetch(HdfsIndexerMetadata(avroFile.toString, 393, i))
-      Assertions.assertEquals(((21 + i) * 2).toString, gr.get("val3").asInstanceOf[Utf8].toString)
+    entries.foreach(e => {
+      println("fetching: " + e._2)
+      val sq = avroIndexer.fetch(e._2)
+      Assertions.assertEquals(e._1, sq)
     })
   }
 }
