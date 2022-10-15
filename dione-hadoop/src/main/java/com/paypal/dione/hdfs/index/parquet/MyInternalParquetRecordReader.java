@@ -234,7 +234,7 @@ public class MyInternalParquetRecordReader<T> {
 
         recordFound = true;
 
-        LOG.debug("read value[offset: {}, sub_offset {}, current {}]: {}", currentBlock, currentInBlock, current, currentValue.toString().substring(0, 200));
+        LOG.debug("read value[offset: {}, sub_offset {}, current {}]: {}", currentBlock, currentInBlock, current, currentValue.toString());
       } catch (RuntimeException e) {
         throw new ParquetDecodingException(format("Can not read value at %d in block %d in file %s", current, currentBlock, reader.getPath()), e);
       }
