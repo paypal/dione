@@ -29,10 +29,11 @@ object TestParquetIndexer extends AvroExtensions {
     val conf = fileSystem.getConf
 
     fileSystem.delete(parquetFile, false)
-
-    val fileWriter = AvroParquetWriter.builder[GenericRecord](parquetFile).withSchema(avroSchema).withConf(conf).build
-
-    (1 to 10).foreach(i => {
+    val fileWriter = AvroParquetWriter.builder[GenericRecord](parquetFile)
+      .withRowGroupSize(100)
+      .withSchema(avroSchema)
+      .withConf(conf).build
+    (1 to 1000).foreach(i => {
       val r = new GenericData.Record(avroSchema).putItems(
         (i + "", i, (i * 2) + "", i * 2).productIterator)
       fileWriter.write(r)
@@ -53,11 +54,12 @@ class TestParquetIndexer {
   @Test
   @Order(1)
   def testCreateIndex: Unit = {
-    val parquetIndexList = ParquetIndexer(TestParquetIndexer.parquetFile, 0, 0, fileSystem.getConf, Some(projectedAvroSchema))
+    val conf = fileSystem.getConf
+    val parquetIndexList = ParquetIndexer(TestParquetIndexer.parquetFile, 0, 0, conf, Some(projectedAvroSchema))
       .iteratorWithMetadata.toList
 
     //println(parquetIndexList)
-    Assertions.assertEquals(10, parquetIndexList.size)
+    Assertions.assertEquals(1000, parquetIndexList.size)
     Assertions.assertEquals((0,0), (parquetIndexList.head._2.position, parquetIndexList.head._2.numInBlock))
   }
 
@@ -67,6 +69,9 @@ class TestParquetIndexer {
     val parquetIndexer = new ParquetIndexer(parquetFile, fileSystem.getConf)
     Assertions.assertEquals("{\"val1\": \"5\", \"val2\": 5, \"val3\": \"10\", \"val4\": 10}",
       parquetIndexer.fetch(HdfsIndexerMetadata(parquetFile.toString, 0,4,0)).toString)
+
+    Assertions.assertEquals("{\"val1\": \"999\", \"val2\": 999, \"val3\": \"1998\", \"val4\": 1998}",
+      parquetIndexer.fetch(9,98).toString)
   }
 
   @Order(3)
