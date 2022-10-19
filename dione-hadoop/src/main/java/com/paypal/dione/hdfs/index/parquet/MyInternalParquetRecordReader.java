@@ -36,10 +36,8 @@ import org.apache.parquet.io.api.RecordMaterializer.RecordMaterializationExcepti
 import org.apache.parquet.schema.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.*;
-
 import static java.lang.String.format;
 import static org.apache.parquet.Preconditions.checkNotNull;
 import static org.apache.parquet.hadoop.ParquetInputFormat.RECORD_FILTERING_ENABLED;
@@ -50,7 +48,7 @@ import static org.apache.parquet.hadoop.ParquetInputFormat.STRICT_TYPE_CHECKING;
  * currentInBlock, etc.
  */
 
-class MyInternalParquetRecordReader<T> {
+public class MyInternalParquetRecordReader<T> {
   private static final Logger LOG = LoggerFactory.getLogger(MyInternalParquetRecordReader.class);
 
   private ColumnIOFactory columnIOFactory = null;
@@ -66,6 +64,7 @@ class MyInternalParquetRecordReader<T> {
 
   private T currentValue;
   private long total;
+  private long rowGroupSize;
   private long current = 0;
   private int currentBlock = -1;
   private int currentInBlock = -1;
@@ -156,7 +155,13 @@ class MyInternalParquetRecordReader<T> {
   }
 
   public boolean skipRowGroup() {
-    LOG.info("skipping block {}", currentBlock);
+    if(currentBlock + 1 >= rowGroupSize) {
+      LOG.info("Already reached the last row group {}, ignored.", currentBlock);
+      current = totalCountLoadedSoFar;
+      return true;
+    }
+    LOG.info("skipping block {}", ++currentBlock);
+    current = totalCountLoadedSoFar;
     return reader.skipNextRowGroup();
   }
 
@@ -185,11 +190,12 @@ class MyInternalParquetRecordReader<T> {
         configuration, fileMetadata, fileSchema, readContext);
     this.strictTypeChecking = configuration.getBoolean(STRICT_TYPE_CHECKING, true);
     this.total = reader.getRecordCount();
+    this.rowGroupSize = reader.getRowGroups().size();
     this.unmaterializableRecordCounter = new UnmaterializableRecordCounter(configuration, total);
     this.filterRecords = configuration.getBoolean(
         RECORD_FILTERING_ENABLED, false);
     reader.setRequestedSchema(requestedSchema);
-    LOG.info("RecordReader initialized will read a total of {} records.", total);
+    LOG.info("RecordReader initialized will read a total of {} records with {} row groups.", total, rowGroupSize);
   }
 
   public boolean nextKeyValue() throws IOException {
@@ -228,7 +234,7 @@ class MyInternalParquetRecordReader<T> {
 
         recordFound = true;
 
-        LOG.debug("read value: {}", currentValue);
+        LOG.debug("read value[offset: {}, sub_offset {}, current {}]: {}", currentBlock, currentInBlock, current, currentValue.toString());
       } catch (RuntimeException e) {
         throw new ParquetDecodingException(format("Can not read value at %d in block %d in file %s", current, currentBlock, reader.getPath()), e);
       }
