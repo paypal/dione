@@ -41,7 +41,7 @@ class TestAvroIndexManagerNonUnique {
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("tbl", "index_tbl", Seq("key")))(spark)
+    IndexManager.createNew("tbl", "index_tbl", Seq("key"))
     spark.sql("desc formatted index_tbl").show(100, false)
   }
 

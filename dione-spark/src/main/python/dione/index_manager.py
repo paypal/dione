@@ -50,7 +50,7 @@ class IndexManager(object):
         key = scala_helper.list_to_seq(keys)
         moreFields = scala_helper.list_to_seq(more_fields)
         idx_spec = scala_helper.get_object("com.paypal.dione.spark.index.IndexSpec")
-        is_java = idx_spec.apply(data_table_name, index_table_name, key, moreFields)
+        is_java = idx_spec.create(data_table_name, index_table_name, key, moreFields, spark._jsparkSession)
         im = scala_helper.get_object("com.paypal.dione.spark.index.IndexManager") \
             .createNew(is_java, spark._jsparkSession)
         return IndexManager(spark, im)

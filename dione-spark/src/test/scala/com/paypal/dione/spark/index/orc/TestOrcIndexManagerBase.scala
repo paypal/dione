@@ -8,7 +8,7 @@ import org.junit.jupiter.api._
 @TestMethodOrder(classOf[OrderAnnotation])
 class TestOrcIndexManagerBase extends TestIndexManagerBase {
 
-  lazy val indexSpec: IndexSpec = IndexSpec("orc_data_tbl", "orc_data_tbl_idx", Seq("id_col"))
+  lazy val indexSpec: IndexSpec = IndexSpec.create("orc_data_tbl", "orc_data_tbl_idx", Seq("id_col"))
 
   def initDataTable(fieldsSchema: String, partitionFieldName: String): Unit = {
     spark.sql(s"create table ${indexSpec.dataTableName} ($fieldsSchema) partitioned by ($partitionFieldName string) stored as orc")

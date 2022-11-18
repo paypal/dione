@@ -8,7 +8,7 @@ import org.junit.jupiter.api._
 @TestMethodOrder(classOf[OrderAnnotation])
 class TestSequenceFileIndexManagerBase extends TestIndexManagerBase {
 
-  lazy val indexSpec: IndexSpec = IndexSpec("seq_file_data_tbl", "seq_file_data_tbl_idx", Seq("id_col"), Seq("meta_field"))
+  lazy val indexSpec: IndexSpec = IndexSpec.create("seq_file_data_tbl", "seq_file_data_tbl_idx", Seq("id_col"), Seq("meta_field"))
 
   def initDataTable(fieldsSchema: String, partitionFieldName: String): Unit = {
     spark.sql(s"create table ${indexSpec.dataTableName} ($fieldsSchema)" +

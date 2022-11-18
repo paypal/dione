@@ -8,7 +8,7 @@ import org.junit.jupiter.api._
 @TestMethodOrder(classOf[OrderAnnotation])
 class TestParquetIndexManagerBase extends TestIndexManagerBase {
 
-  lazy val indexSpec: IndexSpec = IndexSpec("parquet_data_tbl", "parquet_data_tbl_idx", Seq("id_col"), Seq("meta_field"))
+  lazy val indexSpec: IndexSpec = IndexSpec.create("parquet_data_tbl", "parquet_data_tbl_idx", Seq("id_col"), Seq("meta_field"))
 
   def initDataTable(fieldsSchema: String, partitionFieldName: String): Unit = {
     val sc = spark.sparkContext
