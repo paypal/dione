@@ -10,9 +10,9 @@ class TestSequenceFileIndexManagerBase extends TestIndexManagerBase {
 
   lazy val indexSpec: IndexSpec = IndexSpec("seq_file_data_tbl", "seq_file_data_tbl_idx", Seq("id_col"), Seq("meta_field"))
 
-  def initDataTable(fieldsSchema: String, partitionFieldSchema: String): Unit = {
+  def initDataTable(fieldsSchema: String, partitionFieldName: String): Unit = {
     spark.sql(s"create table ${indexSpec.dataTableName} ($fieldsSchema)" +
-      s" partitioned by ($partitionFieldSchema)" +
+      s" partitioned by ($partitionFieldName string)" +
       s""" ROW FORMAT DELIMITED
         FIELDS TERMINATED BY '\u0010'
         STORED AS INPUTFORMAT
@@ -24,4 +24,5 @@ class TestSequenceFileIndexManagerBase extends TestIndexManagerBase {
 
   val testSamples = Seq(SampleTest("msg_100", Seq("meta_100"), "var_a_100", Some("keys: [k], values: [v100]"), 3677, 0, 42))
   
+  override val samplePartition: String = "'2021-02-03'"
 }
