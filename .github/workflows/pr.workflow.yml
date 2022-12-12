@@ -41,7 +41,7 @@ jobs:
 
   python-api-tests:
     needs: build_jar
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
