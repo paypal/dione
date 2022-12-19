@@ -95,7 +95,7 @@ class TestAvroIndexManager {
   @Order(5)
   @Test
   def testNoSparkGetAndFetch(): Unit = {
-    val basePath = baseTestPath + "hive/index_t3/"
+    val basePath = "spark-warehouse/" + baseTestPath + "hive/index_t3/"
     val specificIndexFolder = basePath + "dt=2018-10-04"
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(specificIndexFolder)
     val valueOpt = avroHashBtreeFolderReader.get(Seq("msg_20", "sub_msg_20"))

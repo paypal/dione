@@ -6,7 +6,7 @@ Examples could also be found in our [tests](dione-spark/src/test/python/index_ma
   - `dione-spark-*.jar`
   - `dione-hadoop-*.jar`
 - Also add Avro related jars to `spark.jars`:
-  - `spark-avro_2.11-2.4.8.jar`
+  - `spark-avro_2.12-3.1.3.jar`
   - `parquet-avro-1.10.0.jar`
   - `avro-1.8.2.jar`
 - add `dione-spark-*.jar` (which contains the python API) to:

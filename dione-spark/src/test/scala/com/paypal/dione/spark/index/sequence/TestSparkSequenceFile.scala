@@ -67,7 +67,7 @@ object TestSparkSequenceFile extends SparkTestBase {
     data.toDF("id").select(
       $"id" cast "string",
       lit(null.asInstanceOf[String]) as "col0",
-      when($"id" % 3 === 0, $"id") otherwise null.asInstanceOf[Int] as "col1",
+      when($"id" % 3 === 0, $"id") otherwise lit(null) as "col1",
       concat(lit("col2_"), $"id") as "col2",
       ($"id" * 2) as "col3"
     )

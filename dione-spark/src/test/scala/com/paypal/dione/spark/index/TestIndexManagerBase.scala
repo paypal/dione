@@ -22,7 +22,8 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
 
   val samplePartition: String
 
-  case class SampleTest(key: String, moreFields: Seq[String], varValue: String, offset: Long, subOffset: Int, size: Int)
+  case class SampleTest(key: String, moreFields: Seq[String], varValue: String, varMap: Option[String],
+                        offset: Long, subOffset: Int, size: Int)
   val testSamples: Seq[SampleTest]
 
   def initDataTable(fieldsSchema: String, partitionFieldName: String): Unit
@@ -33,11 +34,11 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
 
     import spark.implicits._
 
-    initDataTable("id_col string, var1 string, var2 int, meta_field string",
+    initDataTable("id_col string, meta_field string, var1 string, var2 int, var_map map<string, string>",
       "dt")
 
-    (1 to 300).map(i => ("msg_" + i, "var_a_" + i, i, "meta_"+i))
-      .toDF("id_col", "var1", "var2", "meta_field")
+    (1 to 300).map(i => ("msg_" + i, "meta_"+i, "var_a_" + i, i, Map("k" -> ("v"+i))))
+      .toDF("id_col", "meta_field", "var1", "var2", "var_map")
       .repartition(3)
       .createOrReplaceTempView("t")
 
@@ -123,12 +124,13 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
   @Test
   def testFetchAll(): Unit = {
     val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
-    testSamples.foreach(sample => {
+    testSamples.filter(_.varMap.nonEmpty).foreach(sample => {
       // to support also non string partition types we added "'" to the partition value (not the cleanest way)
       val samplePartitionClean = samplePartition.replace("'", "")
       val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartitionClean))
       Assertions.assertEquals(sample.varValue, vars.get("var1").toString)
-      Assertions.assertEquals("List((id_col,msg_100), (meta_field,meta_100), (var1,var_a_100), (var2,100))",
+      Assertions.assertEquals(
+        "List((id_col,msg_100), (meta_field,meta_100), (var1,var_a_100), (var2,100), (var_map,"+sample.varMap.get+"))",
         vars.get.toList.sortBy(_._1).toString)
     })
   }
@@ -143,6 +145,20 @@ abstract class TestIndexManagerBase() extends SparkCleanTestDB {
       Assertions.assertEquals(sample.varValue, vars.get("var1"))
       Assertions.assertFalse(vars.get.contains("var2"))
       Assertions.assertEquals("List((id_col,msg_100), (var1,var_a_100))",
+        vars.get.toList.sortBy(_._1).toString)
+    })
+  }
+
+  @Order(8)
+  @Test
+  def testFetchMap(): Unit = {
+    val indexManager = IndexManager.load(indexSpec.indexTableName)(spark)
+    testSamples.filter(_.varMap.nonEmpty).foreach(sample => {
+      val samplePartitionClean = samplePartition.replace("'", "")
+      val vars = indexManager.fetch(Seq(sample.key), Seq("dt" -> samplePartitionClean), Some(Seq("var_map")))
+      Assertions.assertEquals(sample.varMap.get, vars.get("var_map").toString)
+      Assertions.assertFalse(vars.get.contains("var2"))
+      Assertions.assertEquals("List((id_col,msg_100), (var_map,"+sample.varMap.get+"))",
         vars.get.toList.sortBy(_._1).toString)
     })
   }

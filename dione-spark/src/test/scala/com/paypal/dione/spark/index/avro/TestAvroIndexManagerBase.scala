@@ -14,7 +14,7 @@ class TestAvroIndexManagerBase extends TestIndexManagerBase {
     spark.sql(s"create table ${indexSpec.dataTableName} ($fieldsSchema) partitioned by ($partitionFieldName long) stored as avro")
   }
 
-  val testSamples = Seq(SampleTest("msg_100", Nil, "var_a_100", 349, 22, 31))
+  val testSamples = Seq(SampleTest("msg_100", Nil, "var_a_100", Some("{k=v100}"), 441, 75, 42))
 
   override val samplePartition: String = "20210203"
 }

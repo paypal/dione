@@ -14,7 +14,6 @@ class TestOrcIndexManagerBase extends TestIndexManagerBase {
     spark.sql(s"create table ${indexSpec.dataTableName} ($fieldsSchema) partitioned by ($partitionFieldName string) stored as orc")
   }
 
-  val testSamples = Seq(SampleTest("msg_100", Nil, "var_a_100", 22, 0, -1))
-
+  val testSamples = Seq(SampleTest("msg_100", Nil, "var_a_100", None, 75, 0, -1))
   override val samplePartition: String = "'2021-02-03'"
 }

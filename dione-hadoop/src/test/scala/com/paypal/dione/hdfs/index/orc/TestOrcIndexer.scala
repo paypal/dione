@@ -4,7 +4,7 @@ import com.paypal.dione.hdfs.index.HdfsIndexerMetadata
 import com.paypal.dione.hdfs.index.orc.TestOrcIndexer.{fileSystem, orcFile}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.orc.storage.ql.exec.vector.{BytesColumnVector, DoubleColumnVector, LongColumnVector}
+import org.apache.hadoop.hive.ql.exec.vector.{BytesColumnVector, DoubleColumnVector, LongColumnVector}
 import org.apache.orc.{OrcFile, TypeDescription}
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api.{Assertions, BeforeAll, Order, Test, TestMethodOrder}

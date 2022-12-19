@@ -9,6 +9,9 @@ import org.apache.parquet.avro.AvroReadSupport
 import org.apache.parquet.hadoop.ParquetFileReader
 import org.slf4j.LoggerFactory
 
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+
 case class ParquetIndexer(file: Path, start: Long, end: Long, conf: Configuration, projectedSchema: Option[Schema])
   extends HdfsIndexer[GenericRecord]() {
 
@@ -25,10 +28,13 @@ case class ParquetIndexer(file: Path, start: Long, end: Long, conf: Configuratio
   private val fileReader = new MyInternalParquetRecordReader[GenericRecord](new AvroReadSupport[GenericRecord])
   if (projectedSchema.nonEmpty) {
     AvroReadSupport.setRequestedProjection(conf, projectedSchema.get)
+    AvroReadSupport.setAvroReadSchema(conf, projectedSchema.get)
+    fileReader.initialize(reader, conf, projectedSchema.get.getFields.map(_.name()).toSet.asJava)
   } else {
     conf.unset(AvroReadSupport.AVRO_REQUESTED_PROJECTION)
+    conf.unset("parquet.avro.read.schema")
+    fileReader.initialize(reader, conf, null)
   }
-  fileReader.initialize(reader, conf)
 
   override def closeCurrentFile(): Unit = {
     fileReader.close()
