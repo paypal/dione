@@ -7,7 +7,7 @@
     <name>Dione</name>
     <description>an HDFS indexing library</description>
     <url>https://github.com/paypal/dione</url>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.7.0</version>
 
     <packaging>pom</packaging>
 
@@ -15,7 +15,7 @@
         <scala.binary.version>2.12</scala.binary.version>
         <scala.version>2.12.10</scala.version>
         <junit.version>5.4.2</junit.version>
-        <hadoop.version>3.2.0</hadoop.version>
+        <hadoop.version>3.2.4</hadoop.version>
         <avro.version>1.8.2</avro.version>
     </properties>
 
@@ -54,6 +54,14 @@
             <url>https://github.com/shay1bz</url>
             <roles>
                 <role>Project Owner</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+       <developer>
+            <id>eyala</id>
+            <name>Eyal Allweil</name>
+            <url>https://github.com/eyala</url>
+            <roles>
                 <role>Committer</role>
             </roles>
         </developer>

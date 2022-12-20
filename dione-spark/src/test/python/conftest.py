@@ -19,8 +19,8 @@ def spark_session():
     remove_folder('spark-warehouse')
 
     dione_jars = [
-        "dione-hadoop/target/dione-hadoop-0.7.0-SNAPSHOT.jar",
-        "dione-spark/target/dione-spark-0.7.0-SNAPSHOT.jar"
+        "dione-hadoop/target/dione-hadoop-0.7.0.jar",
+        "dione-spark/target/dione-spark-0.7.0.jar"
     ]
 
     spark_jars = [
