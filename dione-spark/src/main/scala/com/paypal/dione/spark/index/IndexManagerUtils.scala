@@ -197,7 +197,7 @@ object IndexManagerUtils {
     val tblproperties = Seq("index.meta.dataTableName" -> dataTableName, "index.meta.keys" -> keys.mkString("|"),
       "index.meta.moreFields" -> moreFields.mkString("|")).map(t => "'" + t._1 + "'='" + t._2 + "'")
 
-    spark.sql(s"create table $indexTableName (" + schemaStr + ") partitioned by (" +
+    spark.sql(s"create table $indexTableName (" + schemaStr + //") partitioned by (" +
       partitionsSchemaStr + ") stored as avro TBLPROPERTIES (" + tblproperties.mkString(",") + ")")
   }
 
