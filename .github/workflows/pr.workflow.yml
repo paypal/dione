@@ -28,7 +28,7 @@ jobs:
 
       - name: Maven build
         run:
-            mvn -B -V clean package
+            mvn -B -V clean package -DargLine="-Xmx4000m"
 
       - name: Upload jar file
         uses: actions/upload-artifact@v2
