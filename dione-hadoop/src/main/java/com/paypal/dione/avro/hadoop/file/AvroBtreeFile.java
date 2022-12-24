@@ -578,7 +578,7 @@ public class AvroBtreeFile {
 
             this.schema = schema;
             this.recordsBuffer = recordsBuffer;
-            this.memoryWriter = inMemoryWriter.setSyncInterval(1 << 20);
+            this.memoryWriter = inMemoryWriter.setSyncInterval(Integer.MAX_VALUE);
             this.headerPosition = inMemoryWriter.sync();
             this.options = options;
             syncs = new LinkedList<>();
@@ -592,7 +592,7 @@ public class AvroBtreeFile {
             DatumWriter<GenericRecord> datumWriter = model.createDatumWriter(schema);
             DataFileWriter<GenericRecord> inMemoryWriter =
                     new DataFileWriter<>(datumWriter)
-                            .setSyncInterval(1 << 20)
+                            .setSyncInterval(Integer.MAX_VALUE)
                             .setCodec(options.getCodec())
                             .create(schema, recordsBuffer);
             return inMemoryWriter;
@@ -628,7 +628,7 @@ public class AvroBtreeFile {
                         .setMeta(DATA_SIZE_KEY, dataSize) // put data size in metadata:
                         .setMeta(KEY_VALUE_HEADER_NAME, keyValueFields) // put data size in metadata:
                         .setCodec(options.getCodec())
-                        .setSyncInterval(1 << 20)
+                        .setSyncInterval(Integer.MAX_VALUE)
                         .create(schema, output);
 
                 // read blocks backwards, and append to the real file:
