@@ -592,7 +592,6 @@ public class AvroBtreeFile {
             DatumWriter<GenericRecord> datumWriter = model.createDatumWriter(schema);
             DataFileWriter<GenericRecord> inMemoryWriter =
                     new DataFileWriter<>(datumWriter)
-                            .setSyncInterval(Integer.MAX_VALUE)
                             .setCodec(options.getCodec())
                             .create(schema, recordsBuffer);
             return inMemoryWriter;
