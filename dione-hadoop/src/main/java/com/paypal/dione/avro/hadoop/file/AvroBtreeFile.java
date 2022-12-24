@@ -38,6 +38,7 @@ public class AvroBtreeFile {
     public static final String METADATA_COL_NAME = "metadata";
     public static final String KEY_VALUE_HEADER_NAME = "btree.spec.kv";
     private static final Logger logger = LoggerFactory.getLogger(AvroBtreeFile.class);
+    private static final int SYNC_INTERVAL = (1 << 20) * 10; // 10 MB
 
     // Schema of Long that can be null
     public static Schema metadataSchema = SchemaBuilder.unionOf().nullType().and().longType().endUnion();
@@ -578,7 +579,7 @@ public class AvroBtreeFile {
 
             this.schema = schema;
             this.recordsBuffer = recordsBuffer;
-            this.memoryWriter = inMemoryWriter.setSyncInterval(1 << 30);
+            this.memoryWriter = inMemoryWriter.setSyncInterval(SYNC_INTERVAL);
             this.headerPosition = inMemoryWriter.sync();
             this.options = options;
             syncs = new LinkedList<>();
@@ -627,7 +628,7 @@ public class AvroBtreeFile {
                         .setMeta(DATA_SIZE_KEY, dataSize) // put data size in metadata:
                         .setMeta(KEY_VALUE_HEADER_NAME, keyValueFields) // put data size in metadata:
                         .setCodec(options.getCodec())
-                        .setSyncInterval(1 << 30)
+                        .setSyncInterval(SYNC_INTERVAL)
                         .create(schema, output);
 
                 // read blocks backwards, and append to the real file:
