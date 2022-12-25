@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * <p>
  * it is basically a copy from org.apache.avro.hadoop.file.SortedKeyValueFile with changes so every block in the avro
  * file is a b-tree node, and every row has one additional "long" field that points to this record's child node if
- * if is not a leaf record
+ * it is not a leaf record
  */
 public class AvroBtreeFile {
     public static final String DATA_SIZE_KEY = "data_bytes";
@@ -46,7 +46,7 @@ public class AvroBtreeFile {
         private final Long dataSize;
         private final long fileHeaderEnd;
 
-        private final DataFileReader<GenericRecord> mFileReader;
+        public final DataFileReader<GenericRecord> mFileReader;
 
         private final Schema mKeySchema;
         private final Schema mValueSchema;
@@ -261,7 +261,7 @@ public class AvroBtreeFile {
 
                         Node retNode = readBlockFromFile();
                         long nextOffset = mFileReader.previousSync() - fileHeaderEnd;
-                        while (nextOffset - offset < 100 &&
+                        while (nextOffset - offset < 0 &&
                                !nodeCache.containsKey(nextOffset) &&
                                mFileReader.hasNext()) {
                             Node bufNode = readBlockFromFile();

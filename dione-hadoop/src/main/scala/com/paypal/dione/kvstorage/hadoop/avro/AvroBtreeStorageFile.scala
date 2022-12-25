@@ -48,7 +48,7 @@ case class AvroBtreeStorageFileWriter(kschema: Schema,
     var lastEntry: (GenericRecord, GenericRecord) = null
     sortedEntriesList.foreach { case e@(keyRecord, valueRecord) =>
       lastEntry = e
-      if (counter % 100000 == 0)
+      if (counter % 1 == 0)
         logger.info("written record #" + counter + ": " + e)
       counter += 1
 
