@@ -170,5 +170,38 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     Assertions.assertEquals(List("2", "3"),
       kvStorageFileReader.getIterator(simpleSchema.createRecord("b1")).map(_.get("val2").toString).toList)
   }
+
+
+  @Test
+  def testCacheIteration(): Unit = {
+    val keySchema = SchemaBuilder.record("single_string").fields().requiredInt("key").endRecord()
+    val valueSchema = SchemaBuilder.record("simple_tuple").fields()
+      .requiredString("val1").requiredString("strstr")
+      .requiredString("strstr2")
+      .endRecord()
+    val simpleStorage = AvroBtreeStorageFileFactory(keySchema, valueSchema)
+    val kvStorageFileReader = simpleStorage.reader("../src/test/resources/issue67/index_tbl_data/part-50k.btree.avro")
+    //val kvStorageFileReader = simpleStorage.reader("s3a://some_bucket/tmp/part-100k.btree.avro")
+
+      def runOnIter(it: Iterator[_]) = {
+        var blah = it.next()
+        var count = 1
+        while (it.hasNext) {
+          blah = it.next()
+          count += 1
+          if (count % 1000 == 123)
+            println("counter: " + count)
+        }
+        println(blah)
+        println("counter: " + count)
+      }
+
+    val it = kvStorageFileReader.getIterator()
+//    import scala.collection.JavaConverters._
+//    val it = kvStorageFileReader.fileReader.mFileReader.iterator().asScala
+
+    runOnIter(it)
+  }
+
 }
 
