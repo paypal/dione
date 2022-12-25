@@ -261,7 +261,7 @@ public class AvroBtreeFile {
 
                         Node retNode = readBlockFromFile();
                         long nextOffset = mFileReader.previousSync() - fileHeaderEnd;
-                        while (nextOffset - offset < 100000 &&
+                        while (nextOffset - offset < 100 &&
                                !nodeCache.containsKey(nextOffset) &&
                                mFileReader.hasNext()) {
                             Node bufNode = readBlockFromFile();

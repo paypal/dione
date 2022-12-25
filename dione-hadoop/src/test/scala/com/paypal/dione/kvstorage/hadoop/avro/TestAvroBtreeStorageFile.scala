@@ -180,7 +180,7 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
       .requiredString("strstr2")
       .endRecord()
     val simpleStorage = AvroBtreeStorageFileFactory(keySchema, valueSchema)
-    val kvStorageFileReader = simpleStorage.reader("../src/test/resources/issue67/index_tbl_data/part-50k.btree.avro")
+    val kvStorageFileReader = simpleStorage.reader("../dione-spark/src/test/resources/issue67/index_tbl_data/part-50k.btree.avro")
     //val kvStorageFileReader = simpleStorage.reader("s3a://some_bucket/tmp/part-100k.btree.avro")
 
       def runOnIter(it: Iterator[_]) = {
