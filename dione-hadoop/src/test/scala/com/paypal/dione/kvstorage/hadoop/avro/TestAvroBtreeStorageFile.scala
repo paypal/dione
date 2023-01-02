@@ -4,6 +4,8 @@ import com.paypal.dione.avro.utils.AvroExtensions
 import org.apache.avro.SchemaBuilder
 import org.junit.jupiter.api.{Assertions, Test}
 
+import scala.collection.mutable.ArrayBuffer
+
 class TestAvroBtreeStorageFile extends AvroExtensions {
   val simpleSchema = SchemaBuilder.record("single_string").fields().requiredString("val1").endRecord()
   val simpleSchema2 = SchemaBuilder.record("single_string2").fields().requiredString("val2").endRecord()
@@ -13,6 +15,8 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
   val tuplesStorage = AvroBtreeStorageFileFactory(simpleSchema, tupleSchema)
 
   val filename = "TestData/TestAvroBtreeStorageFile"
+  val printDebug = false
+  val strList = new ArrayBuffer[String]
 
   @Test
   def testOneLevel(): Unit = {
@@ -44,6 +48,8 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     kvStorageFileWriter.write(entries, filename)
 
     val kvStorageFileReader = simpleStorage.reader(filename)
+    printBtreeAvroFile(kvStorageFileReader)
+
     Assertions.assertEquals("002", kvStorageFileReader.get(simpleSchema.createRecord("002")).get.get("val2").toString)
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100")))
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("000")))
@@ -122,6 +128,38 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     val kvStorageFileReader = simpleStorage.reader(filename)
     Assertions.assertEquals(entries.toList.mkString(","),
       kvStorageFileReader.getIterator().map(_._2.get("val2")).toList.mkString(","))
+
+    printBtreeAvroFile(kvStorageFileReader)
+  }
+
+  def printBtreeAvroFile(kvStorageFileReader: AvroBtreeStorageFileReader): Unit = {
+    import scala.collection.JavaConverters._
+    val fileS = kvStorageFileReader.fileReader.getmFileReader
+    fileS.sync(0)
+    val it = fileS.iterator().asScala
+    var block = 0L
+    val headerPos = kvStorageFileReader.fileReader.getFileHeaderEnd
+    printDebug("datasize: " + kvStorageFileReader.fileReader.getmFileReader.getMetaLong("data_bytes"))
+    printDebug("header end at: " + headerPos)
+
+    strList.clear()
+    it.foreach(r => {
+      val lastSync = kvStorageFileReader.fileReader.getmFileReader.previousSync()
+      if (lastSync!=block) {
+        printDebug(r.toString)
+        if (block>0)
+          printDebug("block ^^ at:" + (block-headerPos))
+        block = lastSync
+      } else {
+        printDebug(r.toString)
+      }
+    })
+  }
+
+  def printDebug(log: String): Unit = {
+    if (printDebug)
+      println(log)
+    strList.append(log)
   }
 
   @Test
@@ -135,6 +173,43 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
 
   @Test
   def testIterator10_3(): Unit = btreeProps(100,10, 3)
+
+  @Test
+  def testIterator30_3_3(): Unit = {
+    btreeProps(20,2, 3)
+    Assertions.assertEquals(
+      """{val1: 001, val2: 001, metadata: 295}
+        |{val1: 008, val2: 008, metadata: 195}
+        |{val1: 015, val2: 015, metadata: 93}
+        |block ^^ at:0
+        |{val1: 002, val2: 002, metadata: 259}
+        |{val1: 005, val2: 005, metadata: 227}
+        |block ^^ at:45
+        |{val1: 003, val2: 003, metadata: null}
+        |{val1: 004, val2: 004, metadata: null}
+        |block ^^ at:81
+        |{val1: 006, val2: 006, metadata: null}
+        |{val1: 007, val2: 007, metadata: null}
+        |block ^^ at:113
+        |{val1: 009, val2: 009, metadata: 157}
+        |{val1: 012, val2: 012, metadata: 125}
+        |block ^^ at:145
+        |{val1: 010, val2: 010, metadata: null}
+        |{val1: 011, val2: 011, metadata: null}
+        |block ^^ at:183
+        |{val1: 013, val2: 013, metadata: null}
+        |{val1: 014, val2: 014, metadata: null}
+        |block ^^ at:215
+        |{val1: 016, val2: 016, metadata: 59}
+        |{val1: 019, val2: 019, metadata: 27}
+        |block ^^ at:247
+        |{val1: 017, val2: 017, metadata: null}
+        |{val1: 018, val2: 018, metadata: null}
+        |block ^^ at:281
+        |{val1: 020, val2: 020, metadata: null}
+        |block ^^ at:313""".stripMargin,
+      strList.mkString("\n").replaceAll("\"", ""))
+  }
 
   @Test
   def testIteratorWithKey(): Unit = {

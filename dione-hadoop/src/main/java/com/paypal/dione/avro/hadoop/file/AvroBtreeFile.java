@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * <p>
  * it is basically a copy from org.apache.avro.hadoop.file.SortedKeyValueFile with changes so every block in the avro
  * file is a b-tree node, and every row has one additional "long" field that points to this record's child node if
- * if is not a leaf record
+ * it is not a leaf record
  */
 public class AvroBtreeFile {
     public static final String DATA_SIZE_KEY = "data_bytes";
@@ -57,6 +57,14 @@ public class AvroBtreeFile {
 
         public Schema getValueSchema() {
             return mValueSchema;
+        }
+
+        public long getFileHeaderEnd() {
+            return fileHeaderEnd;
+        }
+
+        public DataFileReader<GenericRecord> getmFileReader() {
+            return mFileReader;
         }
 
         /**
@@ -303,22 +311,25 @@ public class AvroBtreeFile {
         private final int mHeight;
 
         private GenericRecord mPreviousKey;
-        private Node curNode = new Node();
-        private final Node root = curNode;
+        private Node curNode;
+        private final Node root;
 
-        private class Node {
+        private static class Node {
             List<GenericRecord> records;
+            List<Node> childs;
             Node prev;
             int height;
 
-            public Node() {
+            public Node(int mInterval) {
                 records = new ArrayList<>(mInterval);
+                childs = new ArrayList<>(mInterval);
             }
 
-            public Node(Node prevNode) {
-                records = new ArrayList<>(mInterval);
+            public Node(Node prevNode, int mInterval) {
+                this(mInterval);
                 prev = prevNode;
                 height = prevNode.height + 1;
+                prevNode.childs.add(this);
             }
 
             public GenericRecord getCurRecord() {
@@ -483,10 +494,12 @@ public class AvroBtreeFile {
             }
             logger.debug("Created directory " + options.getPath());
 
+            curNode = new Node(mInterval);
+            root = curNode;
+
             // Open a writer for the data file.
             Path dataFilePath = options.getPath();
             logger.debug("Creating writer for avro data file: " + dataFilePath);
-            List<Schema.Field> schemaFields = new ArrayList<>();
             mRecordSchema = createSchema(mKeySchema, mValueSchema);
             String keys = String.join(",", mKeySchema.getFields().stream().map(Schema.Field::name).toArray(String[]::new));
             String values = String.join(",",  mValueSchema.getFields().stream().map(Schema.Field::name).toArray(String[]::new));
@@ -517,14 +530,14 @@ public class AvroBtreeFile {
             if (curNode.height == 0 || curNode.records.size() < mInterval) {
                 curNode.addRecord(dataRecord);
                 if (curNode.height < mHeight) {
-                    curNode = new Node(curNode);
+                    curNode = new Node(curNode, mInterval);
                 }
             } else {
                 while (curNode.records.size() == mInterval && curNode.height > 0) {
-                    flush();
+                    curNode = curNode.prev;
                 }
                 curNode.addRecord(dataRecord);
-                curNode = new Node(curNode);
+                curNode = new Node(curNode, mInterval);
             }
 
         }
@@ -534,26 +547,32 @@ public class AvroBtreeFile {
          */
         @Override
         public void close() throws IOException {
-            while (curNode != root) {
-                flush();
-            }
-            flush();
+            writeNodesReversePreOrder(root);
             bufferedWriter.reverseAndClose(fileSystem.create(filename));
         }
 
-        private void flush() throws IOException {
+        private long writeNodesReversePreOrder(Writer.Node node) throws IOException {
+            for (int i=node.childs.size()-1; i>=0; i--) {
+                Writer.Node child = node.childs.get(i);
+                long pos = writeNodesReversePreOrder(child);
+                if (pos>0) // first block is the root block
+                    node.records.get(i).put(METADATA_COL_NAME, pos);
+            }
+            return writeNodeRecordsInMemory(node);
+        }
+
+        private long writeNodeRecordsInMemory(Writer.Node curNode) throws IOException {
             int numRecordsWriting = curNode.records.size();
             logger.debug("writing {} records in height {}, records: {}", numRecordsWriting, curNode.height, curNode.records);
             for (GenericRecord record : curNode.records) {
                 bufferedWriter.append(record);
             }
+
             // the reader will see the blocks backwards, so need to take the sync marker AFTER the block is written:
             long position = bufferedWriter.sync();
-            curNode = curNode.prev;
-            if (curNode != null) {
-                if (numRecordsWriting > 0)
-                    curNode.getCurRecord().put(METADATA_COL_NAME, position);
-            }
+            // remove data from memory as it was already written to buffer
+            curNode.records = null;
+            return position;
         }
     }
 
