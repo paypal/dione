@@ -220,7 +220,7 @@ public class AvroBtreeFile {
             return new Iterator<GenericRecord>() {
 
                 private final RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
-                private Node next = new Node(0);
+                private Node next = getNode(0);
 
                 @Override
                 public boolean hasNext() {
@@ -246,20 +246,58 @@ public class AvroBtreeFile {
                     return ret;
                 }
 
+                private Map<Long, Node> nodeCache;
+                private Node getNode(long offset) {
+                    if (nodeCache == null) {
+                        nodeCache = new AvroBtreeFileUtils.LRUCache(100);
+                    }
+                    if (nodeCache.containsKey(offset)) {
+                        return nodeCache.get(offset);
+                    }
+                    Node node = bufferNodesFromFile(offset);
+                    nodeCache.put(offset, node);
+                    return node;
+                }
+
+                private Node bufferNodesFromFile(long offset) {
+                    long t1 = System.nanoTime();
+                    try {
+                        logger.info("seeking to offset (after header): " + offset);
+                        mFileReader.seek(fileHeaderEnd + offset);
+                        long t2 = System.nanoTime();
+                        logger.info("seek time: " + (t2 - t1) / 1000 / 1000 + " ms");
+
+                        Node retNode = readBlockFromFile();
+                        long nextOffset = mFileReader.previousSync() - fileHeaderEnd;
+                        while (nextOffset - offset < 100000 &&
+                               !nodeCache.containsKey(nextOffset) &&
+                               mFileReader.hasNext()) {
+                            Node bufNode = readBlockFromFile();
+                            logger.info("caching block in offset: {}", nextOffset);
+                            nodeCache.put(nextOffset, bufNode);
+                            nextOffset = mFileReader.previousSync() - fileHeaderEnd;
+                        }
+                        return retNode;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                private Node readBlockFromFile() {
+                    return new Node();
+                }
+
                 class Node {
-                    Node(long offset) {
-                        try {
-                            mFileReader.seek(fileHeaderEnd + offset);
-                            GenericRecord firstRecord = mFileReader.next();
-                            // we only know the block count after the first next()
-                            int blockCount = (int) mFileReader.getBlockCount();
-                            records = new ArrayList<>(blockCount);
-                            records.add(firstRecord);
-                            for (int i=1; i<blockCount; i++) {
-                                records.add(mFileReader.next());
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                    Node() {
+                        GenericRecord firstRecord = mFileReader.next();
+                        // we only know the block count after the first next()
+                        int blockCount = (int) mFileReader.getBlockCount();
+                        logger.debug("buffering block of {} records", blockCount);
+                        records = new ArrayList<>(blockCount);
+                        // buffer the entire block
+                        records.add(firstRecord);
+                        for (int i=1; i<blockCount; i++) {
+                            records.add(mFileReader.next());
                         }
                     }
 
@@ -268,7 +306,7 @@ public class AvroBtreeFile {
                     }
 
                     Node getChildNode() {
-                        Node childNode = new Node(getRealOffset(records.get(curRecord)));
+                        Node childNode = getNode(getRealOffset(records.get(curRecord)));
                         childNode.parent = this;
                         return childNode;
                     }

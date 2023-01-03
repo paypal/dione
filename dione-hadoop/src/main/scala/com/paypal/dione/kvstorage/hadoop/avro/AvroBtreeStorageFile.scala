@@ -107,8 +107,15 @@ case class AvroBtreeStorageFileReader(override val path: String)
   private def createReaderFrom(path: String) = {
     logger.info(s"Opening avro file: " + path)
 
+    val conf = new Configuration()
+//    conf.set("spark.hadoop.fs.s3a.aws.credentials.provider",
+//      "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+//    conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+//    conf.set("spark.hadoop.fs.s3a.committer.magic.enabled", "true")
+//    conf.set("spark.hadoop.fs.s3a.committer.name", "magic")
+
     val options = new AvroBtreeFile.Reader.Options()
-      .withConfiguration(new Configuration())
+      .withConfiguration(conf)
       .withPath(new Path(path))
 
     new AvroBtreeFile.Reader(options)
