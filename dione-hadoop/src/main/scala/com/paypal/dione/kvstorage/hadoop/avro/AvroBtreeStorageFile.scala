@@ -117,6 +117,7 @@ case class AvroBtreeStorageFileReader(override val path: String)
     val options = new AvroBtreeFile.Reader.Options()
       .withConfiguration(conf)
       .withPath(new Path(path))
+      .withCache(100)
 
     new AvroBtreeFile.Reader(options)
   }

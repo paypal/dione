@@ -45,6 +45,7 @@ public class AvroBtreeFile {
     public static class Reader implements Closeable {
         private final Long dataSize;
         private final long fileHeaderEnd;
+        private final Options options;
 
         private final DataFileReader<GenericRecord> mFileReader;
 
@@ -72,8 +73,8 @@ public class AvroBtreeFile {
          */
         public static class Options {
             private Configuration mConf;
-
             private Path mPath;
+            private int cacheSize;
 
             public Options withConfiguration(Configuration conf) {
                 mConf = conf;
@@ -93,10 +94,16 @@ public class AvroBtreeFile {
                 return mPath;
             }
 
+            public Options withCache(int size) {
+                cacheSize = size;
+                return this;
+            }
+
         }
 
         public Reader(Options options) throws IOException {
             // Open the data file.
+            this.options = options;
             Path dataFilePath = options.getPath();
             logger.debug("Loading the data file " + dataFilePath);
             DatumReader<GenericRecord> datumReader = GenericData.get().createDatumReader(null);
@@ -269,7 +276,8 @@ public class AvroBtreeFile {
 
                         Node retNode = readBlockFromFile();
                         long nextOffset = mFileReader.previousSync() - fileHeaderEnd;
-                        while (nextOffset - offset < 100000 &&
+                        int numBlocksToCache = options.cacheSize / 2;
+                        while (--numBlocksToCache > 0 &&
                                !nodeCache.containsKey(nextOffset) &&
                                mFileReader.hasNext()) {
                             Node bufNode = readBlockFromFile();
