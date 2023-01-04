@@ -220,7 +220,7 @@ public class AvroBtreeFile {
             return new Iterator<GenericRecord>() {
 
                 private final RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);
-                private Node next = new Node(0);
+                private Node next = new Node();
 
                 @Override
                 public boolean hasNext() {
@@ -247,19 +247,14 @@ public class AvroBtreeFile {
                 }
 
                 class Node {
-                    Node(long offset) {
-                        try {
-                            mFileReader.seek(fileHeaderEnd + offset);
-                            GenericRecord firstRecord = mFileReader.next();
-                            // we only know the block count after the first next()
-                            int blockCount = (int) mFileReader.getBlockCount();
-                            records = new ArrayList<>(blockCount);
-                            records.add(firstRecord);
-                            for (int i=1; i<blockCount; i++) {
-                                records.add(mFileReader.next());
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                    Node() {
+                        GenericRecord firstRecord = mFileReader.next();
+                        // we only know the block count after the first next()
+                        int blockCount = (int) mFileReader.getBlockCount();
+                        records = new ArrayList<>(blockCount);
+                        records.add(firstRecord);
+                        for (int i=1; i<blockCount; i++) {
+                            records.add(mFileReader.next());
                         }
                     }
 
@@ -268,7 +263,7 @@ public class AvroBtreeFile {
                     }
 
                     Node getChildNode() {
-                        Node childNode = new Node(getRealOffset(records.get(curRecord)));
+                        Node childNode = new Node();
                         childNode.parent = this;
                         return childNode;
                     }
