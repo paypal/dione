@@ -48,6 +48,7 @@ public class AvroBtreeFile {
         private final Options options;
 
         private final DataFileReader<GenericRecord> mFileReader;
+        private int numSeeks = 0;
 
         private final Schema mKeySchema;
         private final Schema mValueSchema;
@@ -62,6 +63,10 @@ public class AvroBtreeFile {
 
         public long getFileHeaderEnd() {
             return fileHeaderEnd;
+        }
+
+        public int getNumSeeks() {
+            return numSeeks;
         }
 
         public DataFileReader<GenericRecord> getmFileReader() {
@@ -169,6 +174,7 @@ public class AvroBtreeFile {
                     lastRecord = null;
                     try {
                         mFileReader.seek(curOffset);
+                        numSeeks++;
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -269,10 +275,11 @@ public class AvroBtreeFile {
                 private Node bufferNodesFromFile(long offset) {
                     long t1 = System.nanoTime();
                     try {
-                        logger.info("seeking to offset (after header): " + offset);
+                        logger.debug("seeking to offset (after header): " + offset);
                         mFileReader.seek(fileHeaderEnd + offset);
+                        numSeeks++;
                         long t2 = System.nanoTime();
-                        logger.info("seek time: " + (t2 - t1) / 1000 / 1000 + " ms");
+                        logger.debug("seek time: " + (t2 - t1) / 1000 / 1000 + " ms");
 
                         Node retNode = readBlockFromFile();
                         long nextOffset = mFileReader.previousSync() - fileHeaderEnd;
@@ -281,7 +288,7 @@ public class AvroBtreeFile {
                                !nodeCache.containsKey(nextOffset) &&
                                mFileReader.hasNext()) {
                             Node bufNode = readBlockFromFile();
-                            logger.info("caching block in offset: {}", nextOffset);
+                            logger.debug("caching block in offset: {}", nextOffset);
                             nodeCache.put(nextOffset, bufNode);
                             nextOffset = mFileReader.previousSync() - fileHeaderEnd;
                         }

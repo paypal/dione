@@ -120,16 +120,17 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100")))
   }
 
-  def btreeProps(n: Int, interval: Int, height: Int): Unit = {
+  def btreeProps(n: Int, interval: Int, height: Int, cacheSize: Int = 0): AvroBtreeStorageFileReader = {
     val kvStorageFileWriter = simpleStorage.writer(interval, height)
     val entries = (1 to n).map(_.toString.reverse.padTo(3, '0').reverse)
     kvStorageFileWriter.write(entries.iterator.map(i => (simpleSchema.createRecord(i), simpleSchema2.createRecord(i))), filename)
 
-    val kvStorageFileReader = simpleStorage.reader(filename)
+    val kvStorageFileReader = simpleStorage.reader(filename, cacheSize)
     Assertions.assertEquals(entries.toList.mkString(","),
       kvStorageFileReader.getIterator().map(_._2.get("val2")).toList.mkString(","))
 
     printBtreeAvroFile(kvStorageFileReader)
+    kvStorageFileReader
   }
 
   def printBtreeAvroFile(kvStorageFileReader: AvroBtreeStorageFileReader): Unit = {
@@ -248,36 +249,16 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
       kvStorageFileReader.getIterator(simpleSchema.createRecord("b1")).map(_.get("val2").toString).toList)
   }
 
-
   @Test
   def testCacheIteration(): Unit = {
-    val keySchema = SchemaBuilder.record("single_string").fields().requiredInt("key").endRecord()
-    val valueSchema = SchemaBuilder.record("simple_tuple").fields()
-      .requiredString("val1").requiredString("strstr")
-      .requiredString("strstr2")
-      .endRecord()
-    val simpleStorage = AvroBtreeStorageFileFactory(keySchema, valueSchema)
-    val kvStorageFileReader = simpleStorage.reader("../src/test/resources/issue67/index_tbl_data/part-50k.btree.avro")
-    //val kvStorageFileReader = simpleStorage.reader("s3a://some_bucket/tmp/part-100k.btree.avro")
+    var reader = btreeProps(100,3, 3)
+    Assertions.assertEquals(32, reader.fileReader.getNumSeeks)
 
-      def runOnIter(it: Iterator[_]) = {
-        var blah = it.next()
-        var count = 1
-        while (it.hasNext) {
-          blah = it.next()
-          count += 1
-          if (count % 1000 == 123)
-            println("counter: " + count)
-        }
-        println(blah)
-        println("counter: " + count)
-      }
+    reader = btreeProps(100,3, 3, 10)
+    Assertions.assertEquals(7, reader.fileReader.getNumSeeks)
 
-    val it = kvStorageFileReader.getIterator()
-//    import scala.collection.JavaConverters._
-//    val it = kvStorageFileReader.fileReader.mFileReader.iterator().asScala
-
-    runOnIter(it)
+    reader = btreeProps(100,3, 3, 100)
+    Assertions.assertEquals(1, reader.fileReader.getNumSeeks)
   }
 
 }

@@ -47,9 +47,9 @@ case class AvroHashBtreeStorageFolderReader(folderName: String, fileList: List[S
     getFile(numFile)
   }
 
-  private def getFile(numFile: Int): AvroBtreeStorageFileReader = {
+  private def getFile(numFile: Int, cacheSize: Int = 0): AvroBtreeStorageFileReader = {
     val kvStorageFilename = new Path(folderName, fileList(numFile)).toString
-    AvroBtreeStorageFileReader(kvStorageFilename)
+    AvroBtreeStorageFileReader(kvStorageFilename, cacheSize)
   }
 
   override def getIterator(key: Seq[Any]): Iterator[GenericRecord] = {

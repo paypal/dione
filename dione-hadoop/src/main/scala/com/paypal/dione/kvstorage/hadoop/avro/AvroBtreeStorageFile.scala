@@ -16,8 +16,8 @@ case class AvroBtreeStorageFileFactory(kschema: Schema, vschema: Schema) {
   def writer(interval: Int, height: Int): AvroBtreeStorageFileWriter =
     AvroBtreeStorageFileWriter(kschema, vschema, interval, height)
 
-  def reader(fileName: String): AvroBtreeStorageFileReader =
-    AvroBtreeStorageFileReader(fileName)
+  def reader(fileName: String, cacheSize: Int = 0): AvroBtreeStorageFileReader =
+    AvroBtreeStorageFileReader(fileName, cacheSize)
 }
 
 case class AvroBtreeStorageFileWriter(kschema: Schema,
@@ -75,12 +75,17 @@ case class AvroBtreeStorageFileWriter(kschema: Schema,
   }
 }
 
-
-case class AvroBtreeStorageFileReader(override val path: String)
+/**
+ *
+ * @param path       Avro B-tree file's path
+ * @param cacheSize  num of blocks to read ahead sequentially and store in LRU cache to reduce number of seeks.
+ *                   relevant only for full file sorted-iteration
+ */
+case class AvroBtreeStorageFileReader(override val path: String, cacheSize: Int = 0)
   extends KVStorageFileReader[GenericRecord, GenericRecord](path) with AutoCloseable {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  val fileReader = createReaderFrom(path)
+  val fileReader = createReaderFrom(path, cacheSize)
   private val keyGR = new GenericData.Record(fileReader.getKeySchema)
 
   override def getIterator(key: GenericRecord): Iterator[GenericRecord] = {
@@ -104,7 +109,7 @@ case class AvroBtreeStorageFileReader(override val path: String)
     fileReader.getIterator.map(t => (projection.getKey(t), projection.getValue(t)))
   }
 
-  private def createReaderFrom(path: String) = {
+  private def createReaderFrom(path: String, cacheSize: Int) = {
     logger.info(s"Opening avro file: " + path)
 
     val conf = new Configuration()
@@ -117,7 +122,7 @@ case class AvroBtreeStorageFileReader(override val path: String)
     val options = new AvroBtreeFile.Reader.Options()
       .withConfiguration(conf)
       .withPath(new Path(path))
-      .withCache(100)
+      .withCache(cacheSize)
 
     new AvroBtreeFile.Reader(options)
   }
