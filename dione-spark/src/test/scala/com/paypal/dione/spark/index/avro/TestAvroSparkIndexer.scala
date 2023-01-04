@@ -78,7 +78,7 @@ class TestAvroSparkIndexer {
   def testSparkStoringIndexInKV(): Unit = {
     val folderPath = baseTestPath + "spark_index"
 
-    SparkAvroBtreeUtils.writeDFasAvroBtree(spark.table("indexed_df"),
+    SparkAvroBtreeUtils.writeDFAsAvroBtree(spark.table("indexed_df"),
       Seq("message_id"), folderPath, 3, 10, 2)(spark)
 
     val location = new File(folderPath).getAbsoluteFile.toString

@@ -16,7 +16,8 @@ object SparkTestBase {
 trait SparkTestBase {
 
   lazy val spark: SparkSession = {
-    val sparkConf = new SparkConf().setMaster(s"local[1]").set("spark.sql.shuffle.partitions", "3").setAppName("Spark Unit Test")
+    val sparkConf = new SparkConf().setMaster(s"local[1]").set("spark.sql.shuffle.partitions", "3")
+      .set("spark.driver.bindAddress", "127.0.0.1").setAppName("Spark Unit Test")
     val builder = SparkSession.builder().config(sparkConf).enableHiveSupport()
     val spark = builder.getOrCreate()
     // TODO really needed?

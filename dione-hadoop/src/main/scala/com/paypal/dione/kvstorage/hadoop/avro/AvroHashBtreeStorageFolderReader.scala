@@ -22,7 +22,7 @@ object AvroHashBtreeStorageFolderReader {
 
     logger.debug("listing files in folder: " + folderName)
     val fileList = fs.listStatus(new Path(folderName)).map(_.getPath.getName).filter(_.endsWith(AVRO_BTREE_FILE_EXTENSION)).sorted
-    logger.debug("got file list with " + fileList.size + " files")
+    logger.debug("got file list with " + fileList.length + " files")
 
     new AvroHashBtreeStorageFolderReader(folderName, fileList.toList)
   }
@@ -47,7 +47,7 @@ case class AvroHashBtreeStorageFolderReader(folderName: String, fileList: List[S
     getFile(numFile)
   }
 
-  private def getFile(numFile: Int): AvroBtreeStorageFileReader = {
+  def getFile(numFile: Int): AvroBtreeStorageFileReader = {
     val kvStorageFilename = new Path(folderName, fileList(numFile)).toString
     AvroBtreeStorageFileReader(kvStorageFilename)
   }
