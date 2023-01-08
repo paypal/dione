@@ -46,7 +46,8 @@ public class AvroBtreeFile {
         private final Long dataSize;
         private final long fileHeaderEnd;
 
-        private final DataFileReader<GenericRecord> mFileReader;
+        private final Options options;
+        private DataFileReader<GenericRecord> mFileReader;
 
         private final Schema mKeySchema;
         private final Schema mValueSchema;
@@ -96,11 +97,8 @@ public class AvroBtreeFile {
         }
 
         public Reader(Options options) throws IOException {
-            // Open the data file.
-            Path dataFilePath = options.getPath();
-            logger.debug("Loading the data file " + dataFilePath);
-            DatumReader<GenericRecord> datumReader = GenericData.get().createDatumReader(null);
-            mFileReader = new DataFileReader<>(new FsInput(dataFilePath, options.getConfiguration()), datumReader);
+            this.options = options;
+            initFileReader();
             String[] split = mFileReader.getMetaString(KEY_VALUE_HEADER_NAME).split("\\|");
             mKeySchema = projectSchema(mFileReader.getSchema(), split[0].split(","));
             mValueSchema = projectSchema(mFileReader.getSchema(), split[1].split(","));
@@ -109,9 +107,12 @@ public class AvroBtreeFile {
             dataSize = mFileReader.getMetaLong(DATA_SIZE_KEY);
         }
 
-        // TODO: do we need this sync?
-        public void sync(Long syncPosition) throws IOException {
-            mFileReader.sync(syncPosition);
+        private void initFileReader() throws IOException {
+            // Open the data file.
+            Path dataFilePath = options.getPath();
+            logger.debug("Loading the data file " + dataFilePath);
+            DatumReader<GenericRecord> datumReader = GenericData.get().createDatumReader(null);
+            mFileReader = new DataFileReader<>(new FsInput(dataFilePath, options.getConfiguration()), datumReader);
         }
 
         /**
@@ -217,6 +218,13 @@ public class AvroBtreeFile {
          * saved in the file
          */
         public Iterator<GenericRecord> getIterator() {
+            if (mFileReader.previousSync()>fileHeaderEnd) {
+                try {
+                    initFileReader();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             return new Iterator<GenericRecord>() {
 
                 private final RecordProjection projection = new RecordProjection(mKeySchema, mValueSchema);

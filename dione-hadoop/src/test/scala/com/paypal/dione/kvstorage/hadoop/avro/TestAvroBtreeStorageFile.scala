@@ -32,10 +32,8 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
 
     val kvStorageFileReader = tuplesStorage.reader(filename)
 
-
     Assertions.assertEquals(10, kvStorageFileReader.getIterator().toList.size)
     val expected = List(("001", ("1", 1)), ("002", ("2", 2)), ("003", ("3", 3))).map(tuple2records).map(_.toString())
-    kvStorageFileReader.fileReader.sync(0)
     val actual = kvStorageFileReader.getIterator().toList.take(3).map(_.toString())
     Assertions.assertEquals(expected, actual)
   }
@@ -53,7 +51,6 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     Assertions.assertEquals("002", kvStorageFileReader.get(simpleSchema.createRecord("002")).get.get("val2").toString)
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100")))
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("000")))
-    kvStorageFileReader.fileReader.sync(0)
     Assertions.assertEquals(10, kvStorageFileReader.getIterator().size)
   }
 
@@ -67,7 +64,6 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     Assertions.assertEquals("1234", kvStorageFileReader.get(simpleSchema.createRecord("1234")).get.get("val2").toString)
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100a")))
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("000")))
-    kvStorageFileReader.fileReader.sync(0)
     Assertions.assertEquals(100000, kvStorageFileReader.getIterator().size)
   }
 
@@ -99,7 +95,6 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     val kvStorageFileReader = simpleStorage.reader(filename)
     Assertions.assertEquals("1", kvStorageFileReader.get(simpleSchema.createRecord("a")).get.get("val2").toString)
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("aa")))
-    kvStorageFileReader.fileReader.sync(0)
     Assertions.assertEquals(3, kvStorageFileReader.getIterator().size)
   }
 
