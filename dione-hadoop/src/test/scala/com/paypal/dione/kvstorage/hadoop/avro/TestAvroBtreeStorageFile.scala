@@ -18,6 +18,8 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
   val printDebug = false
   val strList = new ArrayBuffer[String]
 
+  def padKey(i: Int, d: Int = 4): String = s"%0${d}d".format(i)
+
   @Test
   def testOneLevel(): Unit = {
 
@@ -45,12 +47,12 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
       .map(i => (simpleSchema.createRecord(i), simpleSchema2.createRecord(i)))
     kvStorageFileWriter.write(entries, filename)
 
+    printBtreeAvroFile(simpleStorage.reader(filename))
     val kvStorageFileReader = simpleStorage.reader(filename)
-    printBtreeAvroFile(kvStorageFileReader)
 
+    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("000")))
     Assertions.assertEquals("002", kvStorageFileReader.get(simpleSchema.createRecord("002")).get.get("val2").toString)
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100")))
-    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("000")))
     Assertions.assertEquals(10, kvStorageFileReader.getIterator().size)
   }
 
@@ -61,9 +63,9 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     kvStorageFileWriter.write(entries, filename)
 
     val kvStorageFileReader = simpleStorage.reader(filename)
-    Assertions.assertEquals("1234", kvStorageFileReader.get(simpleSchema.createRecord("1234")).get.get("val2").toString)
-    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100a")))
     Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("000")))
+    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100a")))
+    Assertions.assertEquals("1234", kvStorageFileReader.get(simpleSchema.createRecord("1234")).get.get("val2").toString)
     Assertions.assertEquals(100000, kvStorageFileReader.getIterator().size)
   }
 
@@ -71,16 +73,18 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
   def testMany(): Unit = {
     val kvStorageFileWriter = simpleStorage.writer(2, 3)
     val N = 100
-    val entries = (1 to N).iterator.map(i => (simpleSchema.createRecord((i * 2).toString), simpleSchema2.createRecord((i * 2).toString)))
+    val entries = (1 to N).iterator.map(i => (simpleSchema.createRecord(padKey(i * 2)), simpleSchema2.createRecord((i * 2).toString)))
     kvStorageFileWriter.write(entries, filename)
 
+    printBtreeAvroFile(simpleStorage.reader(filename))
+
     val kvStorageFileReader = simpleStorage.reader(filename)
-    (-1 to 2 * N + 2).foreach(i => {
+    (1 to 2 * N + 2).foreach(i => {
       //      println("Trying to get: " + i)
-      if (i <= 0 || i > 2 * N || i % 2 == 1)
-        Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema2.createRecord(i.toString)))
+      if (i > 2 * N || i % 2 == 1)
+        Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema2.createRecord(padKey(i))))
       else
-        Assertions.assertEquals(i.toString, kvStorageFileReader.get(simpleSchema2.createRecord(i.toString)).get.get("val2").toString)
+        Assertions.assertEquals(i.toString, kvStorageFileReader.get(simpleSchema2.createRecord(padKey(i))).get.get("val2").toString)
     })
   }
 
@@ -93,26 +97,29 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     kvStorageFileWriter.write(entries, filename)
 
     val kvStorageFileReader = simpleStorage.reader(filename)
-    Assertions.assertEquals("1", kvStorageFileReader.get(simpleSchema.createRecord("a")).get.get("val2").toString)
-    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("aa")))
+    Assertions.assertEquals("1", kvStorageFileReader.getIterator(simpleSchema.createRecord("a")).next().get("val2").toString)
+    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("aa")).hasNext)
+    Assertions.assertEquals("2", kvStorageFileReader.getIterator(simpleSchema.createRecord("b")).next().get("val2").toString)
     Assertions.assertEquals(3, kvStorageFileReader.getIterator().size)
   }
 
   @Test
   def testBugLast(): Unit = {
     val kvStorageFileWriter = simpleStorage.writer(1000, 2)
-    val entries = (1 to 19).iterator.map(_.toString).map{ i=>
-      (simpleSchema.createRecord(i), simpleSchema2.createRecord(i))
+    val entries = (1 to 19).iterator.map{ i=>
+      (simpleSchema.createRecord(padKey(i)), simpleSchema2.createRecord(i.toString))
     }
     kvStorageFileWriter.write(entries, filename)
 
     val kvStorageFileReader = simpleStorage.reader(filename)
+    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("0000")))
+
     (1 to 19).foreach(i => {
-      Assertions.assertEquals("" + i, kvStorageFileReader.get(simpleSchema2.createRecord("" + i)).get.get("val2").toString)
+      Assertions.assertEquals("" + i, kvStorageFileReader.get(simpleSchema2.createRecord(padKey(i))).get.get("val2").toString)
     })
-    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("0")))
-    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("20")))
-    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("100")))
+
+    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("0020")))
+    Assertions.assertEquals(None, kvStorageFileReader.get(simpleSchema.createRecord("0100")))
   }
 
   def btreeProps(n: Int, interval: Int, height: Int): Unit = {
@@ -134,7 +141,8 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
     val it = fileS.iterator().asScala
     var block = 0L
     val headerPos = kvStorageFileReader.fileReader.getFileHeaderEnd
-    printDebug("datasize: " + kvStorageFileReader.fileReader.getmFileReader.getMetaLong("data_bytes"))
+    val dataSize = kvStorageFileReader.fileReader.getmFileReader.getMetaLong("data_bytes")
+    printDebug("datasize: " + dataSize)
     printDebug("header end at: " + headerPos)
 
     strList.clear()
@@ -143,7 +151,7 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
       if (lastSync!=block) {
         printDebug(r.toString)
         if (block>0)
-          printDebug("block ^^ at:" + (block-headerPos))
+          printDebug("block ^^ at:" + (block-headerPos) + " (" + (dataSize-block+headerPos) + ")")
         block = lastSync
       } else {
         printDebug(r.toString)
@@ -176,33 +184,33 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
       """{val1: 001, val2: 001, metadata: 295}
         |{val1: 008, val2: 008, metadata: 195}
         |{val1: 015, val2: 015, metadata: 93}
-        |block ^^ at:0
+        |block ^^ at:0 (340)
         |{val1: 002, val2: 002, metadata: 259}
         |{val1: 005, val2: 005, metadata: 227}
-        |block ^^ at:45
+        |block ^^ at:45 (295)
         |{val1: 003, val2: 003, metadata: null}
         |{val1: 004, val2: 004, metadata: null}
-        |block ^^ at:81
+        |block ^^ at:81 (259)
         |{val1: 006, val2: 006, metadata: null}
         |{val1: 007, val2: 007, metadata: null}
-        |block ^^ at:113
+        |block ^^ at:113 (227)
         |{val1: 009, val2: 009, metadata: 157}
         |{val1: 012, val2: 012, metadata: 125}
-        |block ^^ at:145
+        |block ^^ at:145 (195)
         |{val1: 010, val2: 010, metadata: null}
         |{val1: 011, val2: 011, metadata: null}
-        |block ^^ at:183
+        |block ^^ at:183 (157)
         |{val1: 013, val2: 013, metadata: null}
         |{val1: 014, val2: 014, metadata: null}
-        |block ^^ at:215
+        |block ^^ at:215 (125)
         |{val1: 016, val2: 016, metadata: 59}
         |{val1: 019, val2: 019, metadata: 27}
-        |block ^^ at:247
+        |block ^^ at:247 (93)
         |{val1: 017, val2: 017, metadata: null}
         |{val1: 018, val2: 018, metadata: null}
-        |block ^^ at:281
+        |block ^^ at:281 (59)
         |{val1: 020, val2: 020, metadata: null}
-        |block ^^ at:313""".stripMargin,
+        |block ^^ at:313 (27)""".stripMargin,
       strList.mkString("\n").replaceAll("\"", ""))
   }
 
@@ -216,14 +224,16 @@ class TestAvroBtreeStorageFile extends AvroExtensions {
 
     val kvStorageFileReader = simpleStorage.reader(filename)
 
+    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("a0")).hasNext)
+
     Assertions.assertEquals(List("1", "3"),
       kvStorageFileReader.getIterator(simpleSchema.createRecord("a1")).map(_.get("val2").toString).toList)
+
+    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("a2")).hasNext)
 
     Assertions.assertEquals(List("2"),
       kvStorageFileReader.getIterator(simpleSchema.createRecord("b1")).map(_.get("val2").toString).toList)
 
-    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("a0")).hasNext)
-    Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("a2")).hasNext)
     Assertions.assertFalse(kvStorageFileReader.getIterator(simpleSchema.createRecord("c1")).hasNext)
   }
 

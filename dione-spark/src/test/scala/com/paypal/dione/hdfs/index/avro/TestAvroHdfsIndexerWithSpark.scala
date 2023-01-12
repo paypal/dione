@@ -77,13 +77,14 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   @Order(2)
   @Test
   def testIndexKeyValue(): Unit = {
-    val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_hdfs_btree/index_part-00001")
+    val path = baseTestPath + "avro_hdfs_btree/index_part-00001"
 
-    Assertions.assertEquals(10, avroBtreeStorageFileReader.getIterator().size)
+    Assertions.assertEquals(10, AvroBtreeStorageFileReader(path).getIterator().size)
 
+    val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(path)
+    Assertions.assertEquals(None, avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "foo")))
     val filename = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "msg_13")).get.get(FILE_NAME_COLUMN).toString
     Assertions.assertEquals("part-00001", filename.substring(filename.lastIndexOf("/") + 1).substring(0, 10))
-    Assertions.assertEquals(None, avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "foo")))
   }
 
   @Order(3)
@@ -128,14 +129,14 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   def testFolderKeyValue(): Unit = {
     val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_folder_btree/idx_file")
 
+    Assertions.assertEquals(None, avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "m3")))
+
     val gr = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "msg_20")).get
     val filename = gr.get(FILE_NAME_COLUMN).toString
 
     Assertions.assertEquals("part-00002", filename.substring(filename.lastIndexOf("/")+1).substring(0,10))
     Assertions.assertEquals("2018-10-04 12:34:20", gr.get("time_result_created").toString)
-    avroBtreeStorageFileReader.fileReader.sync(0)
     Assertions.assertEquals(30, avroBtreeStorageFileReader.getIterator().size)
-    Assertions.assertEquals(None, avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "m3")))
   }
 
   @Order(6)
