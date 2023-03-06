@@ -37,8 +37,9 @@ class AvroBtreeJobOptions(val schema: StructType,
 
   def interval: Int = map.getOrElse("btree.interval", "1000").toInt
   def height: Int = map.getOrElse("btree.height", "4").toInt
+  def syncInterval: Int = map.getOrElse("btree.avro.syncInterval", (10 << 20).toString).toInt
 
-  def cleanup = map.get("cleanup").forall(_.toBoolean)
+  def cleanup: Boolean = map.get("cleanup").forall(_.toBoolean)
 
 
   private def validate() = {

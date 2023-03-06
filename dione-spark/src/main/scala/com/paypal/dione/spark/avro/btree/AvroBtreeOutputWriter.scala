@@ -63,6 +63,7 @@ class AvroBtreeOutputWriter( path: String,
       .withInterval(jobOptions.interval)
       .withHeight(jobOptions.height)
       .withCodec(codecFactory)
+      .withAvroSyncInterval(jobOptions.syncInterval)
       .withPath(new Path(path))
 
     new AvroBtreeFile.Writer(avroBtreeFileOptions)
