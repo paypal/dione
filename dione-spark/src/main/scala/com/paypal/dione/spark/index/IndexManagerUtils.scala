@@ -188,16 +188,19 @@ object IndexManagerUtils {
     val schemaStr = Seq(colsSchema, IndexManager.indexSchema)
       .flatMap(schema => schema.fields.map(field => field.name + " " + field.dataType.typeName)).mkString(", ")
 
-    // resolve partitions' schema
-    val partitionsKeys = spark.catalog.listColumns(dataTableName).filter(_.isPartition).collect().map(_.name)
-    val partitionsSchema = spark.table(dataTableName).select(partitionsKeys.map(col): _*).schema
-    val partitionsSchemaStr = partitionsSchema.fields.map(field => field.name + " " + field.dataType.typeName).mkString(", ")
-
     val tblproperties = Seq("index.meta.dataTableName" -> dataTableName, "index.meta.keys" -> keys.mkString("|"),
       "index.meta.moreFields" -> moreFields.mkString("|")).map(t => "'" + t._1 + "'='" + t._2 + "'")
 
-    spark.sql(s"create table $indexTableName (" + schemaStr + ") partitioned by (" +
-      partitionsSchemaStr + ") stored as avro TBLPROPERTIES (" + tblproperties.mkString(",") + ")")
+    // resolve partitions' schema
+    val partitionsKeys = spark.catalog.listColumns(dataTableName).filter(_.isPartition).collect().map(_.name)
+    val partitionedStr = if (partitionsKeys.nonEmpty) {
+      val partitionsSchema = spark.table(dataTableName).select(partitionsKeys.map(col): _*).schema
+      val partitionsSchemaStr = partitionsSchema.fields.map(field => field.name + " " + field.dataType.typeName).mkString(", ")
+      " partitioned by (" + partitionsSchemaStr + ") "
+    } else ""
+
+    spark.sql(s"create table $indexTableName ($schemaStr)" +
+      s"$partitionedStr stored as avro TBLPROPERTIES (${tblproperties.mkString(",")})")
   }
 
   def getTablePartitions(tableName: String, spark: SparkSession): Seq[Seq[(String, String)]] = {
