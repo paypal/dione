@@ -11,7 +11,7 @@
 
     <properties>
         <spark.version>3.3.0</spark.version>
-        <fasterxml.jackson.version>2.10.0</fasterxml.jackson.version>
+        <fasterxml.jackson.version>2.13.3</fasterxml.jackson.version>
     </properties>
 
     <dependencies>
