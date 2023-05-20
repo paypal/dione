@@ -13,7 +13,7 @@
 
     <properties>
         <scala.binary.version>2.12</scala.binary.version>
-        <scala.version>2.12.10</scala.version>
+        <scala.version>2.12.15</scala.version>
         <junit.version>5.4.2</junit.version>
         <hadoop.version>3.2.0</hadoop.version>
         <avro.version>1.8.2</avro.version>
