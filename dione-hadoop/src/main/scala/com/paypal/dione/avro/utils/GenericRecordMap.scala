@@ -14,7 +14,7 @@ case class GenericRecordMap(gr: GenericRecord, projectedFields: Option[Seq[Strin
   lazy private val projectedFieldsSet = projectedFields.map(_.toSet)
 
   override def get(key: String): Option[AnyRef] = {
-    if (projectedFields.isEmpty || projectedFieldsSet.get.contains(key)) {
+    if (gr.hasField(key) && (projectedFields.isEmpty || projectedFieldsSet.get.contains(key))) {
       gr.get(key) match {
         case s: Utf8 => Some(s.toString)
         case other => Option(other)
