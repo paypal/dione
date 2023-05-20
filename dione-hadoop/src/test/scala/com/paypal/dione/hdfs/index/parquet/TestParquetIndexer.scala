@@ -93,14 +93,15 @@ class TestParquetIndexer {
     val conf = fileSystem.getConf
     val prj = new AvroSchemaConverter(conf).convert(new Schema.Parser().parse(str))
     // this is the current "wrong" conversion which caused a bug in ParquetIndexer and an ugly workaround
+    // looks like this is fixed now with the new parquet-1.12.2 version
     Assertions.assertEquals(
       """message dsa_ns.asd {
-        |  optional binary id_col (UTF8);
-        |  optional binary var1 (UTF8);
+        |  optional binary id_col (STRING);
+        |  optional binary var1 (STRING);
         |  optional group var_map (MAP) {
-        |    repeated group map (MAP_KEY_VALUE) {
-        |      required binary key (UTF8);
-        |      optional binary value (UTF8);
+        |    repeated group key_value (MAP_KEY_VALUE) {
+        |      required binary key (STRING);
+        |      optional binary value (STRING);
         |    }
         |  }
         |}
