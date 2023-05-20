@@ -202,7 +202,8 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   def projectRecord(record: GenericRecord, subSchema: Schema): GenericRecord = {
     val otherRecord = new GenericData.Record(subSchema)
     subSchema.getFields.map(_.name()).foreach { name =>
-      otherRecord.put(name, record.get(name))
+      if (record.hasField(name))
+        otherRecord.put(name, record.get(name))
     }
     otherRecord
   }
