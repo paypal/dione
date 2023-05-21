@@ -75,7 +75,7 @@ class IndexManager(object):
         fields_seq = self._scala_helper.list_to_seq(fields)
         fields_seq_opt = self._scala_helper.to_option(fields_seq)
         res_df = self._im.loadByIndex(query_df._jdf, fields_seq_opt)
-        return DataFrame(res_df, self._spark._wrapped)
+        return DataFrame(res_df, self._spark)
 
     def fetch(self, key, partition_spec, fields):
         key_seq = self._scala_helper.list_to_seq(key)
