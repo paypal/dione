@@ -8,7 +8,6 @@ Examples could also be found in our [tests](dione-spark/src/test/scala/com/paypa
 - Also add Avro related jars to `spark.jars`:
     - `spark-avro_2.12-3.3.0.jar`
     - `parquet-avro-1.12.2.jar`
-    - `avro-1.10.1.jar`
     
 ## IndexManager API
 This API is intended for an end-to-end managed solution.

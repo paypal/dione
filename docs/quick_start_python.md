@@ -8,7 +8,6 @@ Examples could also be found in our [tests](dione-spark/src/test/python/index_ma
 - Also add Avro related jars to `spark.jars`:
   - `spark-avro_2.12-3.3.0.jar`
   - `parquet-avro-1.12.2.jar`
-  - `avro-1.10.1.jar`
 - add `dione-spark-*.jar` (which contains the python API) to:
   - `PYTHONPATH`
   - `spark.executorEnv.PYTHONPATH`
