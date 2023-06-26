@@ -1,8 +1,9 @@
-package com.paypal.dione.spark.avro.btree
+package org.apache.spark.sql.avro
 
 import com.paypal.dione.avro.hadoop.file.AvroBtreeFile
 import com.paypal.dione.avro.hadoop.file.AvroBtreeFile.Writer
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader.AVRO_BTREE_SCHEMA_FILENAME
+import com.paypal.dione.spark.avro.btree.AvroBtreeJobOptions
 import org.apache.avro.file.CodecFactory
 import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory
 
 import java.io.BufferedOutputStream
 
-class AvroBtreeOutputWriter( path: String,
+class AvroBtreeOutputWriter( val path: String,
                              context: TaskAttemptContext,
                              schema: StructType,
                              jobOptions: AvroBtreeJobOptions

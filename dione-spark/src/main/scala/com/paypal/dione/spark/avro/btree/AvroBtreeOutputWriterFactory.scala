@@ -18,6 +18,7 @@ package com.paypal.dione.spark.avro.btree
 
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader.AVRO_BTREE_FILE_EXTENSION
 import org.apache.hadoop.mapreduce.TaskAttemptContext
+import org.apache.spark.sql.avro.AvroBtreeOutputWriter
 import org.apache.spark.sql.execution.datasources.{OutputWriter, OutputWriterFactory}
 import org.apache.spark.sql.types.StructType
 

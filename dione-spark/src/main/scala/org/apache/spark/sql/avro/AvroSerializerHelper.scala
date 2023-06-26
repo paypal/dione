@@ -12,7 +12,7 @@ object AvroSerializerHelper {
   }
 
   def avroDeserializer(schema: Schema, dataType: DataType): Any => Option[Any] = {
-    val deserializer = new AvroDeserializer(schema, dataType)
+    val deserializer = new AvroDeserializer(schema, dataType, "EXCEPTION")
     deserializer.deserialize
   }
 

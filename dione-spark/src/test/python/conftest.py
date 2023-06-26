@@ -24,9 +24,8 @@ def spark_session():
     ]
 
     spark_jars = [
-        "https://repo1.maven.org/maven2/org/apache/spark/spark-avro_2.12/3.1.3/spark-avro_2.12-3.1.3.jar",
-        "https://repo1.maven.org/maven2/org/apache/parquet/parquet-avro/1.10.0/parquet-avro-1.10.0.jar",
-        "https://repo1.maven.org/maven2/org/apache/avro/avro/1.8.2/avro-1.8.2.jar"
+        "https://repo1.maven.org/maven2/org/apache/spark/spark-avro_2.12/3.3.0/spark-avro_2.12-3.3.0.jar",
+        "https://repo1.maven.org/maven2/org/apache/parquet/parquet-avro/1.12.2/parquet-avro-1.12.2.jar"
     ]
 
     spark = (SparkSession.builder

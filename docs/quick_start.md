@@ -6,9 +6,8 @@ Examples could also be found in our [tests](dione-spark/src/test/scala/com/paypa
     - `dione-spark-*.jar`
     - `dione-hadoop-*.jar`
 - Also add Avro related jars to `spark.jars`:
-    - `spark-avro_2.12-3.1.3.jar`
-    - `parquet-avro-1.10.0.jar`
-    - `avro-1.8.2.jar`
+    - `spark-avro_2.12-3.3.0.jar`
+    - `parquet-avro-1.12.2.jar`
     
 ## IndexManager API
 This API is intended for an end-to-end managed solution.
