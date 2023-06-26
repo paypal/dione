@@ -28,11 +28,12 @@ For deeper overview please see our [Dione documentation](docs/detailed_doc.md).
 Check out our [Quick Start](docs/quick_start.md) or [Quick Start Python](docs/quick_start_python.md) guides.
 
 ## Compatibility Matrix
-| Dione | Spark|
-|-------|------|
-| 0.5.x | 2.3.x|
-| 0.6.x | 2.4.x|
-| 0.7.x | 3.1.x|
+| Dione | Spark |
+|-------|-------|
+| 0.5.x | 2.3.x |
+| 0.6.x | 2.4.x |
+| 0.7.x | 3.1.x |
+| 0.8.x | 3.3.x |
 
 ## Reporting an issue
 Please open issues in the [GitHub issues](https://github.com/paypal/dione/issues).
