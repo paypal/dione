@@ -179,7 +179,7 @@ object IndexManagerUtils {
   }
 
   def initNewIndexTable(spark: SparkSession, indexSpec: IndexSpec) = {
-    val IndexSpec(dataTableName, indexTableName, keys, moreFields) = indexSpec
+    val IndexSpec(dataTableName, indexTableName, keys, moreFields, indexType) = indexSpec
 
     // resolve schema
     val cols = keys ++ moreFields
@@ -190,7 +190,7 @@ object IndexManagerUtils {
       .flatMap(schema => schema.fields.map(field => field.name + " " + field.dataType.typeName)).mkString(", ")
 
     val tblproperties = Seq("index.meta.dataTableName" -> dataTableName, "index.meta.keys" -> keys.mkString("|"),
-      "index.meta.moreFields" -> moreFields.mkString("|")).map(t => "'" + t._1 + "'='" + t._2 + "'")
+      "index.meta.moreFields" -> moreFields.mkString("|"), "index.meta.type" -> indexType.storeName).map(t => "'" + t._1 + "'='" + t._2 + "'")
 
     // resolve partitions' schema
     val partitionsKeys = spark.catalog.listColumns(dataTableName).filter(_.isPartition).collect().map(_.name)
@@ -201,7 +201,7 @@ object IndexManagerUtils {
     } else ""
 
     spark.sql(s"create table $indexTableName ($schemaStr)" +
-      s"$partitionedStr stored as avro TBLPROPERTIES (${tblproperties.mkString(",")})")
+      s"$partitionedStr stored as ${indexType.storeName} TBLPROPERTIES (${tblproperties.mkString(",")})")
   }
 
   def getTablePartitions(tableName: String, spark: SparkSession): Seq[Seq[(String, String)]] = {

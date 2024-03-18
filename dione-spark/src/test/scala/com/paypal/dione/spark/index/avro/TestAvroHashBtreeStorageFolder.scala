@@ -25,8 +25,11 @@ class TestAvroHashBtreeStorageFolder {
       .withColumn("id", expr("cast(id as long)"))
       .withColumn("val1", expr("floor(id*2)"))
 
-    SparkAvroBtreeUtils.writePartitionedDFasAvroBtree(data, Seq("id"), baseTestPath + "data", 3,
-      3, Seq((Seq("prt" -> "small"), 10), (Seq("prt" -> "big"), 10)))(spark)
+    val keys = Seq("id")
+    val partitionSpec = Seq((Seq("prt" -> "small"), 10), (Seq("prt" -> "big"), 10))
+    SparkAvroBtreeUtils.customRepartition(data, keys, partitionSpec)
+    SparkAvroBtreeUtils.writePartitionedDFasAvroBtree(data, keys, baseTestPath + "data", 3,
+      3, partitionSpec)(spark)
   }
 
   @Test

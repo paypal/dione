@@ -9,8 +9,31 @@ import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+sealed trait IndexType {
+  val storeName: String
+}
+
+object IndexType {
+
+  def parse(from: String) = from match {
+    case AvroBTree.storeName => AvroBTree
+    case Parquet.storeName => Parquet
+    case _=> throw new RuntimeException("Unrecognized index type: " + from)
+  }
+
+  case object AvroBTree extends IndexType {
+    override val storeName: String = "avro"
+  }
+
+  case object Parquet extends IndexType {
+    override val storeName: String = "parquet"
+  }
+
+}
+
 case class IndexSpec(dataTableName: String, indexTableName: String,
-                     keys: Seq[String], moreFields: Seq[String] = Nil)
+                     keys: Seq[String], moreFields: Seq[String] = Nil,
+                     indexType: IndexType = IndexType.AvroBTree)
 
 object IndexManager {
 
@@ -51,14 +74,15 @@ object IndexManager {
    * @param spark
    * @return
    */
-  def load(indexTableName: String)(implicit spark:SparkSession): IndexManager = {
-    val (db, table) =  IndexManagerUtils.getTableName(spark, indexTableName)
+  def load(indexTableName: String)(implicit spark: SparkSession): IndexManager = {
+    val (db, table) = IndexManagerUtils.getTableName(spark, indexTableName)
     val tblProperties = spark.sessionState.catalog.externalCatalog.getTable(db, table).properties
 
     val dataTableName = tblProperties("index.meta.dataTableName")
     val keys = tblProperties("index.meta.keys").split("\\|")
+    val indexType = IndexType.parse(tblProperties.getOrElse("index.meta.type", "avro"))
     val moreFields = tblProperties("index.meta.moreFields").split("\\|").filterNot(_.isEmpty)
-    val indexSpec = IndexSpec(dataTableName, indexTableName, keys, moreFields)
+    val indexSpec = IndexSpec(dataTableName, indexTableName, keys, moreFields, indexType)
 
     // TODO - add the manager class to the table metadata, and pass explicitly here:
     val indexManager: IndexManager = IndexManagerUtils.createIndexManager(spark, indexSpec)
@@ -79,10 +103,10 @@ object IndexManager {
  *                   Spark only to distribute their work.
  *
  */
-case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkIndexer,
+case class IndexManager(@transient spark: SparkSession, sparkIndexer: SparkIndexer,
                         indexSpec: IndexSpec) extends Serializable {
 
-  val IndexSpec(dataTableName, indexTableName, keys, moreFields) = indexSpec
+  val IndexSpec(dataTableName, indexTableName, keys, moreFields, indexType) = indexSpec
 
   lazy val indexFolder: String = {
     val descFormattedIndex = spark.sql(s"desc formatted $indexTableName").collect()
@@ -137,11 +161,27 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
       .drop(PARTITION_DEF_COLUMN)
 
     val partitionsSpecWithNumParts = partitionsSpec.map(t => (t, numParts))
-    SparkAvroBtreeUtils.writePartitionedDFasAvroBtree(indexWithPrtCols, keys, indexFolder,
-      indexInterval, height, partitionsSpecWithNumParts, "append")(spark)
+    val repartitionedDF = SparkAvroBtreeUtils.customRepartition(indexWithPrtCols, keys, partitionsSpecWithNumParts)
 
-    spark.sql("msck repair table " + indexTableName)
-    spark.sql(s"alter table $indexTableName set TBLPROPERTIES ('avro.schema.url'='$indexFolder/.btree.avsc')")
+    indexType match {
+      case IndexType.AvroBTree =>
+        SparkAvroBtreeUtils.writePartitionedDFasAvroBtree(repartitionedDF, keys, indexFolder,
+          indexInterval, height, partitionsSpecWithNumParts, "append")(spark)
+        spark.sql("msck repair table " + indexTableName)
+        spark.sql(s"alter table $indexTableName set TBLPROPERTIES ('avro.schema.url'='$indexFolder/.btree.avsc')")
+      case IndexType.Parquet =>
+        val columns = spark.table(indexTableName).columns
+        // drop intermediate columns:
+        val select = repartitionedDF.columns.filter(columns.contains).map(col)
+        val strict = spark.conf.get("hive.exec.dynamic.partition.mode", null)
+        spark.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
+        repartitionedDF.select(select: _*).write.insertInto(indexTableName)
+        if (strict == null) spark.conf.unset("hive.exec.dynamic.partition.mode")
+        else spark.conf.set("hive.exec.dynamic.partition.mode", strict)
+        spark.sql("msck repair table " + indexTableName)
+    }
+
+
     filesDF.unpersist()
   }
 
@@ -162,7 +202,7 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
   /**
    * Fetch a single data record given a key and specific partition to search in
    *
-   * @param key  record key
+   * @param key record key
    * @return The Record as Map
    */
   def fetch(key: Seq[Any], partitionSpec: Seq[(String, String)], fields: Option[Seq[String]] = None): Option[Map[String, Any]] = {
@@ -179,10 +219,15 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
    * @return The Record as Map
    */
   def fetchAll(key: Seq[Any], partitionSpec: Seq[(String, String)], fields: Option[Seq[String]] = None): Iterator[Map[String, Any]] = {
-    val partitionFolder = indexFolder + "/" + getPartitionFolder(partitionSpec)
-    val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(partitionFolder)
-    val valueIter = avroHashBtreeFolderReader.getIterator(key)
-    valueIter.map(readPayload(_, fields))
+    indexType match {
+      case IndexType.AvroBTree =>
+        val partitionFolder = indexFolder + "/" + getPartitionFolder(partitionSpec)
+        val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(partitionFolder)
+        val valueIter = avroHashBtreeFolderReader.getIterator(key)
+        valueIter.map(readPayload(_, fields))
+      case _ =>
+        throw new UnsupportedOperationException(s"Index type ${indexType.getClass.getName} does not support fetches")
+    }
   }
 
   /**
