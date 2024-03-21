@@ -41,11 +41,11 @@ jobs:
 
   python-api-tests:
     needs: build_jar
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
-        python-version: [ '2.7', '3.6' ]
+        python-version: [ '3.8.1' ]
 
     steps:
       - name: Download the artifacts

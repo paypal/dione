@@ -6,10 +6,12 @@ import com.paypal.dione.hdfs.index.HdfsIndexerMetadata
 import com.paypal.dione.hdfs.index.avro.AvroIndexer
 import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
 import com.paypal.dione.spark.avro.btree.SparkAvroBtreeUtils
-import com.paypal.dione.spark.index.{IndexManager, IndexManagerUtils, IndexSpec}
+import com.paypal.dione.spark.index.{IndexManager, IndexManagerUtils, IndexSpec, IndexType}
 import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.SparkSession
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
+import org.junit.jupiter.api.function.Executable
 
 object TestAvroIndexManager extends SparkCleanTestDB {
 
@@ -34,14 +36,17 @@ object TestAvroIndexManager extends SparkCleanTestDB {
 }
 
 @TestMethodOrder(classOf[OrderAnnotation])
-class TestAvroIndexManager {
+abstract class TestAvroIndexManager {
+  val indexType: IndexType
+  def onCreateIndexTable(spark: SparkSession): Unit = Unit
 
   import TestAvroIndexManager._
 
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
-    IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created")))(spark)
+    onCreateIndexTable(spark)
+    IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created"), indexType))(spark)
     spark.sql("desc formatted index_t3").show(100, false)
   }
 
@@ -66,11 +71,12 @@ class TestAvroIndexManager {
 
     //spark.table("index_t3").show(100, false)
 
-    Assertions.assertEquals(30, spark.table("index_t3").count())
+    val res = spark.table("index_t3").drop("path", "file", FILE_NAME_COLUMN, "dt", "metadata")
+    res.printSchema()
+    Assertions.assertEquals(30, res.count())
 
     Assertions.assertEquals(List("[msg_20,sub_msg_20,2018-10-04 12:34:20,419,0,51]"),
-      spark.table("index_t3").drop("path", "file", FILE_NAME_COLUMN, "dt", "metadata")
-        .where("message_id='msg_20'").collect().toList.map(_.toString()))
+      res.where("message_id='msg_20'").collect().toList.map(_.toString()))
   }
 
   @Test
@@ -95,6 +101,7 @@ class TestAvroIndexManager {
   @Order(5)
   @Test
   def testNoSparkGetAndFetch(): Unit = {
+    if (indexType == IndexType.Parquet) return
     val basePath = baseTestPath + "hive/index_t3/"
     val specificIndexFolder = basePath + "dt=2018-10-04"
     val avroHashBtreeFolderReader = AvroHashBtreeStorageFolderReader(specificIndexFolder)
@@ -111,8 +118,21 @@ class TestAvroIndexManager {
   @Test
   def testFetch(): Unit = {
     val indexManager = IndexManager.load("index_t3")(spark)
-    val vars = indexManager.fetch(Seq("msg_20", "sub_msg_20"), Seq("dt" -> "2018-10-04"))
-    Assertions.assertEquals("var_a_20", vars.get("var1").toString)
+
+    def doFetch() = {
+      val vars = indexManager.fetch(Seq("msg_20", "sub_msg_20"), Seq("dt" -> "2018-10-04"))
+      Assertions.assertEquals("var_a_20", vars.get("var1").toString)
+    }
+
+    indexType match {
+      case IndexType.AvroBTree => doFetch()
+      case IndexType.Parquet =>
+        Assertions.assertThrows(classOf[UnsupportedOperationException], new Executable {
+          override def execute(): Unit = doFetch()
+        })
+    }
+
+
   }
 
   @Order(7)
@@ -128,4 +148,16 @@ class TestAvroIndexManager {
     Assertions.assertEquals(None, kvGetter.get(Seq("msg_119")))
   }
 
+}
+
+class AvroDataAvroIndex extends TestAvroIndexManager {
+  override val indexType: IndexType = IndexType.AvroBTree
+}
+class AvroDataParquetIndex extends TestAvroIndexManager {
+  override val indexType: IndexType = IndexType.Parquet
+
+  override def onCreateIndexTable(spark: SparkSession): Unit = {
+    spark.conf.set("index.manager.indexTable.external", "true")
+    spark.conf.set("index.manager.indexTable.path", TestAvroIndexManager.baseTestPath + "/ext_hive_table")
+  }
 }

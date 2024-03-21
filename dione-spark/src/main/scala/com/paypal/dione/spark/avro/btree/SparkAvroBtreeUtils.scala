@@ -45,7 +45,9 @@ object SparkAvroBtreeUtils {
                          numFilesInFolder: Int, interval: Int, height: Int,
                          mode: String = "overwrite"
                         )(implicit spark: SparkSession): Unit = {
-    writePartitionedDFasAvroBtree(df, keys, folderName, interval, height, Seq((Nil, numFilesInFolder)), mode)
+    val partitionSpec = Seq((Nil, numFilesInFolder))
+    val repartitionedDF = customRepartition(df, keys, partitionSpec)
+    writePartitionedDFasAvroBtree(repartitionedDF, keys, folderName, interval, height, partitionSpec, mode)
   }
 
   /**
@@ -69,9 +71,8 @@ object SparkAvroBtreeUtils {
     logger.info("writing index file to " + folderName + s" with interval: $interval, height: $height," +
       s" partitionsSpec: $partitionsSpec")
 
-    val repartitionedDF = customRepartition(df, keys, partitionsSpec)
 
-    repartitionedDF
+    df
       .write
       .partitionBy(partitionKeys:_*)
       .mode(mode)
@@ -120,6 +121,7 @@ object SparkAvroBtreeUtils {
     val indexTableValueSchema = spark.table(avroBtreeTable)
       .drop(keys:_*)
       .drop(AvroBtreeFile.METADATA_COL_NAME)
+      .drop(KEY_HASH_COLUMN, PARTITION_HASH_COLUMN)
       .drop(partitionKeys:_*)
       .schema
     val outputSchema = StructType(dsDF.schema ++ indexTableValueSchema)
@@ -158,9 +160,8 @@ object SparkAvroBtreeUtils {
               Iterator.empty
             else {
               val nxt = kvIt.head
-              // taking the dsDF's data without the last two fields (keyhash, prthash)
-              // and the value record from the avro-btree file
-              Iterator(Row.fromSeq(row.toSeq.slice(0, row.size - 2) ++ converter.convert(nxt._2).toSeq))
+              // taking the dsDF's data and the value record from the avro-btree file
+              Iterator(Row.fromSeq(row.toSeq ++ converter.convert(nxt._2).toSeq))
             }
           })
         }
@@ -223,5 +224,6 @@ object SparkAvroBtreeUtils {
 
     spark.createDataFrame(customPartitionedRDD.map(_._2), dfWithHashes.schema)
       .sortWithinPartitions((partitionKeys ++ keys).map(col):_*)
+      .drop(PARTITION_HASH_COLUMN, KEY_HASH_COLUMN)
   }
 }
