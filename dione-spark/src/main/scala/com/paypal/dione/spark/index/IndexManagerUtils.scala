@@ -199,9 +199,17 @@ object IndexManagerUtils {
       val partitionsSchemaStr = partitionsSchema.fields.map(field => field.name + " " + field.dataType.typeName).mkString(", ")
       " partitioned by (" + partitionsSchemaStr + ") "
     } else ""
+    val isExternal = spark.conf.get("index.manager.indexTable.external", "false").toBoolean
+    val externalPart = if(isExternal) " external " else ""
+    val locationPart = if (isExternal) {
+      val path = spark.conf.getOption("index.manager.indexTable.path").getOrElse(throw new IllegalArgumentException(
+        "index.manager.indexTable.external is 'true' but 'index.manager.indexTable.path' is not set"))
+      f" LOCATION '$path' "
+    }
+      else ""
 
-    spark.sql(s"create table $indexTableName ($schemaStr)" +
-      s"$partitionedStr stored as ${indexType.storeName} TBLPROPERTIES (${tblproperties.mkString(",")})")
+    spark.sql(s"create $externalPart table $indexTableName ($schemaStr)" +
+      s"$partitionedStr stored as ${indexType.storeName} $locationPart TBLPROPERTIES (${tblproperties.mkString(",")})")
   }
 
   def getTablePartitions(tableName: String, spark: SparkSession): Seq[Seq[(String, String)]] = {

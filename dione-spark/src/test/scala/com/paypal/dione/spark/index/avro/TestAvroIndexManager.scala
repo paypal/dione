@@ -8,6 +8,7 @@ import com.paypal.dione.kvstorage.hadoop.avro.AvroHashBtreeStorageFolderReader
 import com.paypal.dione.spark.avro.btree.SparkAvroBtreeUtils
 import com.paypal.dione.spark.index.{IndexManager, IndexManagerUtils, IndexSpec, IndexType}
 import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.SparkSession
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
 import org.junit.jupiter.api.function.Executable
@@ -37,12 +38,14 @@ object TestAvroIndexManager extends SparkCleanTestDB {
 @TestMethodOrder(classOf[OrderAnnotation])
 abstract class TestAvroIndexManager {
   val indexType: IndexType
+  def onCreateIndexTable(spark: SparkSession): Unit = Unit
 
   import TestAvroIndexManager._
 
   @Test
   @Order(1)
   def testCreateIndexManager(): Unit = {
+    onCreateIndexTable(spark)
     IndexManager.createNew(IndexSpec("t3", "index_t3", Seq("message_id", "sub_message_id"), Seq("time_result_created"), indexType))(spark)
     spark.sql("desc formatted index_t3").show(100, false)
   }
@@ -152,4 +155,9 @@ class AvroDataAvroIndex extends TestAvroIndexManager {
 }
 class AvroDataParquetIndex extends TestAvroIndexManager {
   override val indexType: IndexType = IndexType.Parquet
+
+  override def onCreateIndexTable(spark: SparkSession): Unit = {
+    spark.conf.set("index.manager.indexTable.external", "true")
+    spark.conf.set("index.manager.indexTable.path", TestAvroIndexManager.baseTestPath + "/ext_hive_table")
+  }
 }
