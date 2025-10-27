@@ -112,6 +112,9 @@ case class IndexManager(@transient val spark: SparkSession, sparkIndexer: SparkI
    * @param partitionsSpec the new partitions to index
    */
   def appendNewPartitions(partitionsSpec: Seq[Seq[(String, String)]]): Unit = {
+
+    require(partitionsSpec.nonEmpty, "The partitionsSpec parameter cannot be empty")
+
     val partitionLocations = IndexManagerUtils.getPartitionLocations(dataTableName, partitionsSpec, spark)
 
     val fileLikeExp = spark.conf.get("index.manager.file.filter", "%")

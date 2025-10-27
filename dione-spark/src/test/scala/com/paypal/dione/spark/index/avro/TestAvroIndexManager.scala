@@ -119,7 +119,7 @@ class TestAvroIndexManager {
   @Test
   def testKVstoreNoIndex(): Unit = {
     val kvFolder = baseTestPath + "kv_no_index"
-    SparkAvroBtreeUtils.writeDFasAvroBtree(spark.table("t3"), Seq("message_id"), kvFolder,
+    SparkAvroBtreeUtils.writeDFAsAvroBtree(spark.table("t3"), Seq("message_id"), kvFolder,
       5, 5, 2)(spark)
 
     val kvGetter = AvroHashBtreeStorageFolderReader(kvFolder)
