@@ -22,7 +22,7 @@ jobs:
       - name: Setup Java env
         uses: actions/setup-java@v2.1.0
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'zulu'
           check-latest: true
 
@@ -56,7 +56,7 @@ jobs:
       - name: Setup Java env
         uses: actions/setup-java@v2.1.0
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'zulu'
           check-latest: true
 
@@ -71,5 +71,5 @@ jobs:
           export PYTHONPATH=`echo dione-spark/target/dione-spark-*-SNAPSHOT.jar`
           python -V
           pip install pypandoc==1.7.5
-          pip install pytest pyspark==3.3.0
+          pip install pytest pyspark==3.5.3
           pytest -v
