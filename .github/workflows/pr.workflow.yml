@@ -38,6 +38,8 @@ jobs:
             dione-hadoop/target/*.jar
             dione-spark/target/*.jar
             dione-spark/src/test/python
+            pom.xml
+            dione-spark/pom.xml
 
   python-api-tests:
     needs: build_jar
