@@ -1,18 +1,18 @@
 package com.paypal.dione.hdfs.index.avro
 
 import java.io.File
-
 import com.paypal.dione.SparkCleanTestDB
 import com.paypal.dione.avro.utils.AvroExtensions
 import com.paypal.dione.hdfs.index.HdfsIndexContants._
 import com.paypal.dione.hdfs.index.HdfsIndexerMetadata
-import com.paypal.dione.hdfs.index.avro.TestAvroHdfsIndexerWithSpark.baseTestPath
+import com.paypal.dione.hdfs.index.avro.TestAvroHdfsIndexerWithSpark.{MESSAGE_ID, baseTestPath, expectedFilePart}
 import com.paypal.dione.kvstorage.hadoop.avro.{AvroBtreeStorageFileReader, AvroBtreeStorageFileWriter}
 import com.paypal.dione.spark.index.avro.SeqSplitTest.fs
 import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.functions
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api._
 
@@ -22,6 +22,8 @@ object TestAvroHdfsIndexerWithSpark extends SparkCleanTestDB {
 
   override val baseTestPath: String = "TestData/TestAvroHdfsIndexerWithSpark/"
   override val dbName: String = "TestAvroHdfsIndexerWithSpark"
+  var expectedFilePart: String = ""
+  val MESSAGE_ID = "msg_13"
 
   @BeforeAll
   def initData(): Unit = {
@@ -32,7 +34,9 @@ object TestAvroHdfsIndexerWithSpark extends SparkCleanTestDB {
 
     varsDF.createOrReplaceTempView("t")
     spark.sql(s"create table t1 stored as avro as select * from t")
-
+    expectedFilePart = "part-(\\d+)-".r
+      .findFirstMatchIn(spark.table("t1").filter($"message_id" === MESSAGE_ID).select(functions.input_file_name()).as[String].head)
+      .map(_.group(1)).getOrElse(throw new RuntimeException("Failed to find test row"))
     spark.table("t1").show()
   }
 
@@ -47,6 +51,7 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   private val avroMergedSchema = getMergedAvroSchema(avroMoreFieldsSchema)
 
   lazy val spark = TestAvroHdfsIndexerWithSpark.spark
+
 
   @Order(1)
   @Test
@@ -66,7 +71,8 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
           val key = projectRecord(gr, avroKeySchema)
           val v = mergeWithGenericRecord(idx, projectRecord(gr, avroMoreFieldsSchema))
           (key, v)
-        } }
+        }
+        }
       val filename = file.getPath.getName.substring(0, 10)
       // save the index data in a key-value storage format
       AvroBtreeStorageFileWriter(avroKeySchema, avroMergedSchema, 3, 2)
@@ -77,22 +83,22 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   @Order(2)
   @Test
   def testIndexKeyValue(): Unit = {
-    val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_hdfs_btree/index_part-00001")
+    val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_hdfs_btree/index_part-" + expectedFilePart)
 
     Assertions.assertEquals(10, avroBtreeStorageFileReader.getIterator().size)
 
-    val filename = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "msg_13")).get.get(FILE_NAME_COLUMN).toString
-    Assertions.assertEquals("part-00001", filename.substring(filename.lastIndexOf("/") + 1).substring(0, 10))
+    val filename = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, MESSAGE_ID)).get.get(FILE_NAME_COLUMN).toString
+    Assertions.assertEquals("part-" + expectedFilePart, filename.substring(filename.lastIndexOf("/") + 1).substring(0, 10))
     Assertions.assertEquals(None, avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "foo")))
   }
 
   @Order(3)
   @Test
   def testIndexerFetch(): Unit = {
-    val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_hdfs_btree/index_part-00001")
+    val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_hdfs_btree/index_part-" + expectedFilePart)
 
     val r = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "msg_13")).get
-    val fetcher = AvroIndexer(new Path(r.get(FILE_NAME_COLUMN).toString), 0, 1<<30, fs.getConf)
+    val fetcher = AvroIndexer(new Path(r.get(FILE_NAME_COLUMN).toString), 0, 1 << 30, fs.getConf)
     val gr = fetcher.fetch(HdfsIndexerMetadata(r))
     println(gr)
     Assertions.assertEquals("var_a_13", gr.get("var1").toString)
@@ -116,7 +122,8 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
           val key = projectRecord(gr, avroKeySchema)
           val v = mergeWithGenericRecord(idx, projectRecord(gr, avroMoreFieldsSchema))
           (key, v)
-        }}
+        }
+        }
     }).iterator
 
     AvroBtreeStorageFileWriter(avroKeySchema, avroMergedSchema, 3, 2)
@@ -128,11 +135,11 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   def testFolderKeyValue(): Unit = {
     val avroBtreeStorageFileReader = AvroBtreeStorageFileReader(baseTestPath + "avro_folder_btree/idx_file")
 
-    val gr = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "msg_20")).get
+    val gr = avroBtreeStorageFileReader.get(createRecord(avroKeySchema, MESSAGE_ID)).get
     val filename = gr.get(FILE_NAME_COLUMN).toString
 
-    Assertions.assertEquals("part-00002", filename.substring(filename.lastIndexOf("/")+1).substring(0,10))
-    Assertions.assertEquals("2018-10-04 12:34:20", gr.get("time_result_created").toString)
+    Assertions.assertEquals("part-" + expectedFilePart, filename.substring(filename.lastIndexOf("/") + 1).substring(0, 10))
+    Assertions.assertEquals("2018-10-04 12:34:13", gr.get("time_result_created").toString)
     avroBtreeStorageFileReader.fileReader.sync(0)
     Assertions.assertEquals(30, avroBtreeStorageFileReader.getIterator().size)
     Assertions.assertEquals(None, avroBtreeStorageFileReader.get(createRecord(avroKeySchema, "m3")))
@@ -162,12 +169,12 @@ class TestAvroHdfsIndexerWithSpark extends AvroExtensions {
   @Test
   def testJoinAndFetchWithIndexInSpark(): Unit = {
     import spark.implicits._
-    val ds = spark.createDataset((9 to 11).map(i => "msg_"+i)).toDF("message_id")
+    val ds = spark.createDataset((9 to 11).map(i => "msg_" + i)).toDF("message_id")
 
     val vars = ds.join(spark.table("avro_btree_idx"), "message_id").map(row => {
       val file = new Path(row.getAs[String](FILE_NAME_COLUMN))
       val fs = file.getFileSystem(new Configuration())
-      val gr = AvroIndexer(file, 0, 1<<30, fs.getConf).fetch(HdfsIndexerMetadata(row.getAs[String](FILE_NAME_COLUMN),
+      val gr = AvroIndexer(file, 0, 1 << 30, fs.getConf).fetch(HdfsIndexerMetadata(row.getAs[String](FILE_NAME_COLUMN),
         row.getAs[Long](OFFSET_COLUMN), row.getAs[Int](SUB_OFFSET_COLUMN)))
       (gr.get("message_id").toString, gr.get("var1").toString, gr.get("var2").toString)
     })

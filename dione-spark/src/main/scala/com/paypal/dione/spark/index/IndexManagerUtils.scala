@@ -11,7 +11,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.dione.Metrics
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.hive.SerializableConfiguration
 import org.apache.spark.sql.types._
@@ -82,7 +82,8 @@ object IndexManagerUtils {
   def createIndexDF(filesDF: DataFrame, fieldsSchema: StructType, sparkIndexer: SparkIndexer): DataFrame = {
 
     val outputSchema = StructType(filesDF.schema ++ fieldsSchema ++ IndexManager.indexSchema)
-    implicit val encoder = RowEncoder(outputSchema)
+    implicit val encoder = ExpressionEncoder(outputSchema)
+
 
     filesDF.flatMap((row: Row) => {
       val metrics = Metrics.getReaderMetricsForTask

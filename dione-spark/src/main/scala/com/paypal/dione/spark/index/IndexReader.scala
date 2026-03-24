@@ -7,7 +7,7 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.functions.{col, hash, spark_partition_id}
 import org.apache.spark.sql.types.{LongType, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -173,7 +173,7 @@ object IndexReader {
     readerDF
       // remove intermediate columns:
       .select(cleanIndex.columns.map(col): _*)
-      .mapPartitions(reader.mapPartitions)(RowEncoder(outputSchema))
+      .mapPartitions(reader.mapPartitions)(ExpressionEncoder(outputSchema))
   }
 
   def getReporter(spark: SparkSession) = {
@@ -247,7 +247,7 @@ object IndexReader {
         val rowWithAccSum = Row.fromSeq(row.toSeq ++ Seq(sum)) // add __sum column
         Accumulator(rowWithAccSum, currentFile, sum, count + 1)
       }.drop(1 /* <-- drop the initial empty row */).map(_.row)
-    }(RowEncoder(reducedPartitionsDF.schema.add("__sum", LongType)))
+    }(ExpressionEncoder(reducedPartitionsDF.schema.add("__sum", LongType)))
   }
 
   private def printChunksStats(chunkedDF: DataFrame): Unit = {

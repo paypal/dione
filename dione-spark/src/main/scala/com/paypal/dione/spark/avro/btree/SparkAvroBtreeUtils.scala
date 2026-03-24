@@ -9,7 +9,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.Partitioner
 import org.apache.spark.sql.avro.{AvroDeserializer, AvroSerializerHelper}
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.functions.{array, col, expr}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -170,7 +170,7 @@ object SparkAvroBtreeUtils {
             }
           })
         }
-      })(RowEncoder(outputSchema))
+      })(ExpressionEncoder(outputSchema))
     joinedDF
   }
 

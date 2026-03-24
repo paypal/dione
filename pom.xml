@@ -7,16 +7,20 @@
     <name>Dione</name>
     <description>an HDFS indexing library</description>
     <url>https://github.com/paypal/dione</url>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
     <properties>
+        <maven.compile.source>11</maven.compile.source>
+        <maven.compile.target>11</maven.compile.target>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.version>2.12.15</scala.version>
         <junit.version>5.4.2</junit.version>
-        <hadoop.version>3.2.0</hadoop.version>
+        <hadoop.version>3.3.6</hadoop.version>
         <avro.version>1.11.0</avro.version>
+
+        <parquet-avro.version>1.13.1</parquet-avro.version>
     </properties>
 
     <modules>
@@ -73,7 +77,7 @@
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-avro</artifactId>
-            <version>1.12.2</version>
+            <version>${parquet-avro.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.orc</groupId>
@@ -132,11 +136,7 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.25</version>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.25</version>
-        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -230,8 +230,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${maven.compile.source}</source>
+                    <target>${maven.compile.target}</target>
                 </configuration>
             </plugin>
             <plugin>
