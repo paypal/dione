@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="stdout" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d %5p %c{3} - %m%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Logger name="com.paypal.dione" level="INFO"/>
+    <Logger name="com.paypal.dione.avro.hadoop.file" level="INFO"/>
+    <Logger name="org.apache.hadoop.io.compress.CodecPool" level="WARN"/>
+    <Root level="INFO">
+      <AppenderRef ref="stdout"/>
+    </Root>
+  </Loggers>
+</Configuration>

@@ -25,3 +25,4 @@ tmp
 
 TestData
 settings-ossrh.xml
+venv/
