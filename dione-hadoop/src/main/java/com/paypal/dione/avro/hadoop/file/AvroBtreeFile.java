@@ -357,6 +357,7 @@ public class AvroBtreeFile {
             private int mInterval = 128;
             private int mHeight = 2;
             private int initialCapacityMB = 20;
+            private int avroSyncInterval = 10 << 20;
 
             private GenericData model = SpecificData.get();
 
@@ -442,6 +443,15 @@ public class AvroBtreeFile {
 
             public CodecFactory getCodec() {
                 return this.codec;
+            }
+
+            public int getAvroSyncInterval() {
+                return avroSyncInterval;
+            }
+
+            public Options withAvroSyncInterval(int avroSyncInterval) {
+                this.avroSyncInterval = avroSyncInterval;
+                return this;
             }
         }
 
@@ -578,7 +588,7 @@ public class AvroBtreeFile {
 
             this.schema = schema;
             this.recordsBuffer = recordsBuffer;
-            this.memoryWriter = inMemoryWriter.setSyncInterval(1 << 20);
+            this.memoryWriter = inMemoryWriter.setSyncInterval(options.getAvroSyncInterval());
             this.headerPosition = inMemoryWriter.sync();
             this.options = options;
             syncs = new LinkedList<>();
@@ -592,7 +602,6 @@ public class AvroBtreeFile {
             DatumWriter<GenericRecord> datumWriter = model.createDatumWriter(schema);
             DataFileWriter<GenericRecord> inMemoryWriter =
                     new DataFileWriter<>(datumWriter)
-                            .setSyncInterval(1 << 20)
                             .setCodec(options.getCodec())
                             .create(schema, recordsBuffer);
             return inMemoryWriter;
@@ -628,7 +637,7 @@ public class AvroBtreeFile {
                         .setMeta(DATA_SIZE_KEY, dataSize) // put data size in metadata:
                         .setMeta(KEY_VALUE_HEADER_NAME, keyValueFields) // put data size in metadata:
                         .setCodec(options.getCodec())
-                        .setSyncInterval(1 << 20)
+                        .setSyncInterval(options.getAvroSyncInterval())
                         .create(schema, output);
 
                 // read blocks backwards, and append to the real file:

@@ -64,6 +64,7 @@ class AvroBtreeOutputWriter( val path: String,
       .withInterval(jobOptions.interval)
       .withHeight(jobOptions.height)
       .withCodec(codecFactory)
+      .withAvroSyncInterval(context.getConfiguration.getInt("btree.avro.syncInterval", 10 << 20))
       .withPath(new Path(path))
 
     new AvroBtreeFile.Writer(avroBtreeFileOptions)
